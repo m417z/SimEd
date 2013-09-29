@@ -59,14 +59,6 @@ DoUndo proc uses ebx edi,hMem:DWORD
 			inc		[ebx].EDIT.cpMin
 			inc		[ebx].EDIT.cpMax
 		.elseif al==UNDO_INSERTBLOCK
-			push	edx
-			invoke GetCursor
-			pop		edx
-			push	eax
-			push	edx
-			invoke LoadCursor,0,IDC_WAIT
-			invoke SetCursor,eax
-			pop		edx
 			mov		eax,[edi+edx].RAUNDO.cp
 			mov		[ebx].EDIT.cpMin,eax
 			mov		[ebx].EDIT.cpMax,eax
@@ -77,19 +69,9 @@ DoUndo proc uses ebx edi,hMem:DWORD
 				pop		ecx
 				dec		ecx
 			.endw
-			pop		eax
-			invoke SetCursor,eax
 		.elseif al==UNDO_DELETEBLOCK
 			push	[ebx].EDIT.fOvr
 			mov		[ebx].EDIT.fOvr,FALSE
-			push	edx
-			invoke GetCursor
-			pop		edx
-			push	eax
-			push	edx
-			invoke LoadCursor,0,IDC_WAIT
-			invoke SetCursor,eax
-			pop		edx
 			mov		ecx,[edi+edx].RAUNDO.cp
 			mov		[ebx].EDIT.cpMin,ecx
 			mov		[ebx].EDIT.cpMax,ecx
@@ -106,8 +88,6 @@ DoUndo proc uses ebx edi,hMem:DWORD
 				inc		edx
 				dec		ecx
 			.endw
-			pop		eax
-			invoke SetCursor,eax
 			pop		[ebx].EDIT.fOvr
 		.endif
 		mov		edx,[ebx].EDIT.rpUndo
@@ -198,14 +178,6 @@ DoRedo proc uses ebx edi,hMem:DWORD
 		.elseif al==UNDO_INSERTBLOCK
 			push	[ebx].EDIT.fOvr
 			mov		[ebx].EDIT.fOvr,FALSE
-			push	edx
-			invoke GetCursor
-			pop		edx
-			push	eax
-			push	edx
-			invoke LoadCursor,0,IDC_WAIT
-			invoke SetCursor,eax
-			pop		edx
 			mov		ecx,[edi+edx].RAUNDO.cp
 			mov		[ebx].EDIT.cpMin,ecx
 			mov		[ebx].EDIT.cpMax,ecx
@@ -224,18 +196,8 @@ DoRedo proc uses ebx edi,hMem:DWORD
 				dec		ecx
 			.endw
 			mov		[ebx].EDIT.rpUndo,edx
-			pop		eax
-			invoke SetCursor,eax
 			pop		[ebx].EDIT.fOvr
 		.elseif al==UNDO_DELETEBLOCK
-			push	edx
-			invoke GetCursor
-			pop		edx
-			push	eax
-			push	edx
-			invoke LoadCursor,0,IDC_WAIT
-			invoke SetCursor,eax
-			pop		edx
 			mov		eax,[edi+edx].RAUNDO.cp
 			mov		[ebx].EDIT.cpMin,eax
 			mov		[ebx].EDIT.cpMax,eax
@@ -249,8 +211,6 @@ DoRedo proc uses ebx edi,hMem:DWORD
 				pop		ecx
 				dec		ecx
 			.endw
-			pop		eax
-			invoke SetCursor,eax
 		.endif
 		mov		edx,[ebx].EDIT.rpUndo
 		.if edx
