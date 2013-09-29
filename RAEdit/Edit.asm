@@ -420,10 +420,6 @@ DeleteSelection proc uses ebx edi,hMem:DWORD,cpMin:DWORD,cpMax:DWORD
 	.endw
 	pop		eax
 	.if eax!=cpMax
-		invoke GetCursor
-		push	eax
-		invoke LoadCursor,0,IDC_WAIT
-		invoke SetCursor,eax
 		mov		eax,cpMax
 		sub		eax,cpMin
 		push	eax
@@ -442,8 +438,6 @@ DeleteSelection proc uses ebx edi,hMem:DWORD,cpMin:DWORD,cpMax:DWORD
 		pop		eax
 		invoke SaveUndo,ebx,UNDO_DELETEBLOCK,cpMin,edi,eax
 		invoke GlobalFree,edi
-		pop		eax
-		invoke SetCursor,eax
 		mov		eax,cpMin
 		mov		[ebx].EDIT.cpMin,eax
 		mov		[ebx].EDIT.cpMax,eax
@@ -501,10 +495,6 @@ EditInsert proc uses ebx esi edi,hMem:DWORD,cp:DWORD,lpBuff:DWORD
 	mov		esi,lpBuff
 	mov		edi,cp
 	.if esi
-		invoke GetCursor
-		push	eax
-		invoke LoadCursor,0,IDC_WAIT
-		invoke SetCursor,eax
 		mov		al,[esi]
 		.while al
 			.if al!=0Ah
@@ -515,8 +505,6 @@ EditInsert proc uses ebx esi edi,hMem:DWORD,cp:DWORD,lpBuff:DWORD
 			inc		esi
 			mov		al,[esi]
 		.endw
-		pop		eax
-		invoke SetCursor,eax
 	.endif
 	mov		eax,edi
 	sub		eax,cp

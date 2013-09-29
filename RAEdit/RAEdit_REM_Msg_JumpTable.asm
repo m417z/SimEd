@@ -254,11 +254,7 @@
 		_REM_SETBLOCKS:
 			;wParam=[lpLINERANGE]
 			;lParam=0
-			invoke GetCursor
-			push	eax
 			push	nBmid
-			invoke LoadCursor,0,IDC_WAIT
-			invoke SetCursor,eax
 			mov		esi,offset blockdefs
 			lea		edi,[esi+32*4]
 			.while dword ptr [esi]
@@ -275,8 +271,6 @@
 				invoke InvalidateRect,[ebx].EDIT.edta.hwnd,NULL,FALSE
 				invoke InvalidateRect,[ebx].EDIT.edtb.hwnd,NULL,FALSE
 			.endif
-			pop		eax
-			invoke SetCursor,eax
 			xor		eax,eax
 			ret
 		align 4

@@ -133,10 +133,6 @@
 		_EM_STREAMIN:
 			;wParam=SF_TEXT
 			;lParam=lpStream
-			invoke GetCursor
-			push	eax
-			invoke LoadCursor,0,IDC_WAIT
-			invoke SetCursor,eax
 			invoke StreamIn,ebx,lParam
 			xor		eax,eax
 			mov		[ebx].EDIT.edta.cpy,eax
@@ -165,8 +161,6 @@
 			invoke InvalidateEdit,ebx,[ebx].EDIT.edtb.hwnd
 			invoke SetCaret,ebx,0
 			invoke SelChange,ebx,SEL_TEXT
-			pop		eax
-			invoke SetCursor,eax
 			inc		nUndoid
 			xor		eax,eax
 			ret
@@ -174,13 +168,7 @@
 		_EM_STREAMOUT:
 			;wParam=SF_TEXT
 			;lParam=lpStream
-			invoke GetCursor
-			push	eax
-			invoke LoadCursor,0,IDC_WAIT
-			invoke SetCursor,eax
 			invoke StreamOut,ebx,lParam
-			pop		eax
-			invoke SetCursor,eax
 			xor		eax,eax
 			ret
 		align 4 
