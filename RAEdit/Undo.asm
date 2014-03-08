@@ -45,12 +45,17 @@ DoUndo proc uses ebx edi,hMem:DWORD
 				invoke DeleteChar,ebx,eax
 			.endif
 		.elseif al==UNDO_DELETE
+			push	[ebx].EDIT.fOvr
+			mov 	[ebx].EDIT.fOvr,FALSE
 			movzx	eax,byte ptr [edi+edx+sizeof RAUNDO]
 			mov		ecx,[edi+edx].RAUNDO.cp
 			mov		[ebx].EDIT.cpMin,ecx
 			mov		[ebx].EDIT.cpMax,ecx
 			invoke InsertChar,ebx,ecx,eax
+			pop 	[ebx].EDIT.fOvr
 		.elseif al==UNDO_BACKDELETE
+			push	[ebx].EDIT.fOvr
+			mov 	[ebx].EDIT.fOvr,FALSE
 			movzx	eax,byte ptr [edi+edx+sizeof RAUNDO]
 			mov		ecx,[edi+edx].RAUNDO.cp
 			mov		[ebx].EDIT.cpMin,ecx
@@ -58,6 +63,7 @@ DoUndo proc uses ebx edi,hMem:DWORD
 			invoke InsertChar,ebx,ecx,eax
 			inc		[ebx].EDIT.cpMin
 			inc		[ebx].EDIT.cpMax
+			pop 	[ebx].EDIT.fOvr
 		.elseif al==UNDO_INSERTBLOCK
 			mov		eax,[edi+edx].RAUNDO.cp
 			mov		[ebx].EDIT.cpMin,eax
