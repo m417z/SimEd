@@ -170,8 +170,9 @@ DwToAscii proc uses ebx esi edi,dwVal:DWORD,lpAscii:DWORD
 
 	mov		eax,dwVal
 	mov		edi,lpAscii
-	or		eax,eax
-	jns		pos
+	.if sdword ptr eax>=0
+		jmp		pos
+	.endif
 	mov		byte ptr [edi],'-'
 	neg		eax
 	inc		edi
@@ -188,8 +189,9 @@ DwToAscii proc uses ebx esi edi,dwVal:DWORD,lpAscii:DWORD
 	add		bl,'0'
 	mov		[edi],bl
 	inc		edi
-	or		eax,eax
-	jne		@b
+	.if eax!=0
+		jmp		@b
+	.endif
 	mov		byte ptr [edi],al
 	.while esi<edi
 		dec		edi
@@ -211,18 +213,22 @@ align 4
 @@:
 	add	eax, 4
 	movzx	edx,word ptr [eax]
-	test	dl,dl
-	je	@lb1
+	.if dl==0
+		jmp	@lb1
+	.endif
 	
-	test	dh, dh
-	je	@lb2
+	.if dh==0
+		jmp	@lb2
+	.endif
 	
 	movzx	edx,word ptr [eax+2]
-	test	dl, dl
-	je	@lb3
-
-	test	dh, dh
-	jne	@B
+	.if dl==0
+		jmp	@lb3
+	.endif
+	
+	.if dh!=0
+		jmp	@b
+	.endif
 	
 	sub	eax,lpSource
 	add	eax,3

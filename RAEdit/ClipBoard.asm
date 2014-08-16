@@ -10,12 +10,14 @@ SetClipData proc lpData:LPSTR,dwSize:dword
 	inc		eax
 	shl		eax,3
 	invoke xGlobalAlloc, GHND or GMEM_DDESHARE, eax
-	test	eax,eax
-	je		@exit2
+	.if eax==0
+		jmp		@exit2
+	.endif
 	mov		hMem,eax
 	invoke GlobalLock,eax	;hGlob
-	test	eax,eax
-	je		@exit1
+	.if eax==0
+		jmp		@exit1
+	.endif
 	mov		pMem,eax
 	invoke RtlMoveMemory,eax,lpData,dwSize
 	mov		eax,pMem

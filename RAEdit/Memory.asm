@@ -86,8 +86,9 @@ GarbageCollection proc lpLine:DWORD,lpSrc:DWORD,lpDst:DWORD
 	rep movsb
 	add		edi,edx
 	lea		eax,[eax+sizeof LINE]
-	cmp		eax,lpLine
-	jne		@b
+	.if eax!=lpLine
+		jmp		@b
+	.endif
 	sub		edi,lpDst
 	mov		[ebx].EDIT.rpCharsFree,edi
 	ret

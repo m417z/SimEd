@@ -201,8 +201,9 @@
 				inc		fNoSaveUndo
 			.endif
 			invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
-			or		eax,eax
-			jne		ErrBeep
+			.if eax!=0
+				jmp		ErrBeep
+			.endif
 			inc		nUndoid
 			invoke DeleteSelection,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
 			mov		[ebx].EDIT.cpMin,eax
