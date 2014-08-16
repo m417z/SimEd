@@ -570,8 +570,9 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 			.if fControl && !fShift
 				;Up, size split
 				.if [ebx].EDIT.fsplitt
-					sub		[ebx].EDIT.fsplitt,10
-					.if CARRY?
+					.if [ebx].EDIT.fsplitt>10
+						sub		[ebx].EDIT.fsplitt,10
+					.else
 						mov		[ebx].EDIT.fsplitt,0
 					.endif
 					invoke SendMessage,[ebx].EDIT.hwnd,WM_SIZE,0,0
@@ -762,8 +763,9 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 		.if fAlt
 			.if fControl && !fShift
 				;Left
-				sub		[ebx].EDIT.cpx,20
-				.if CARRY?
+				.if [ebx].EDIT.cpx>20
+					sub		[ebx].EDIT.cpx,20
+				.else
 					mov		[ebx].EDIT.cpx,0
 				.endif
 				invoke InvalidateEdit,ebx,[ebx].EDIT.edta.hwnd
@@ -1020,8 +1022,9 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 					xor		edx,edx
 					div		ecx
 					mov		edx,[ebx].EDIT.blrg.lnMin
-					sub		edx,eax
-					.if CARRY?
+					.if edx>eax
+						sub		edx,eax
+					.else
 						xor		edx,edx
 					.endif
 					mov		eax,[ebx].EDIT.blrg.clMin
@@ -5278,15 +5281,12 @@ align 4
 				add		esi,[ebx].EDIT.hChars
 				mov		ecx,[esi].CHARS.len
 				add		esi,sizeof CHARS
-				sub		chrg.cpMax,ecx
-				.if CARRY?
-					add		chrg.cpMax,ecx
+				.if ecx>chrg.cpMax
 					mov		ecx,chrg.cpMax
 					add		chrg.cpMin,ecx
 					rep movsb
 					.break
 				.endif
-				add		chrg.cpMin,ecx
 				rep movsb
 				add		edx,sizeof LINE
 			.endw

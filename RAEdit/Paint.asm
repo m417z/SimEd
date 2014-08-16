@@ -929,9 +929,11 @@ DrawSelBck:
 			mul		ecx
 			add		rect.left,eax
 			mov		eax,[ebx].EDIT.blrg.clMax
-			sub		eax,[ebx].EDIT.blrg.clMin
-			.if CARRY?
+			.if eax<[ebx].EDIT.blrg.clMin
+				sub		eax,[ebx].EDIT.blrg.clMin
 				neg		eax
+			.else
+				sub		eax,[ebx].EDIT.blrg.clMin
 			.endif
 			mul		ecx
 			add		eax,rect.left

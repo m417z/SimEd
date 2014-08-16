@@ -247,29 +247,35 @@ TstLnUp:
 		.if !esi
 			mov		eax,[edi].CHARS.len
 			mov		lnlen,eax
+			.if cpMin<ecx
+				sub		cpMin,ecx
+				jmp		NotFoundUp
+			.endif
 			sub		cpMin,ecx
+		.else
+			.if edi<[ebx].EDIT.hChars  ; carry with add operation
+				jmp		NotFoundUp
+			.endif
 		.endif
-		.if !CARRY?
-		  NxtUp:
-			.if fWW && ecx
-				movzx	eax,byte ptr [edi+ecx+sizeof CHARS-1]
-				.if byte ptr CharTab[eax]==CT_CHAR
-					dec		ecx
-					.if sdword ptr ecx>=0
-						jmp		NxtUp
-					.endif
-					jmp		NotFoundUp
-				.endif
-			.endif
-			call	TstFind
-			.if al==0
-				jmp		FoundUp
-			.endif
-			.if !esi
+	  NxtUp:
+		.if fWW && ecx
+			movzx	eax,byte ptr [edi+ecx+sizeof CHARS-1]
+			.if byte ptr CharTab[eax]==CT_CHAR
 				dec		ecx
 				.if sdword ptr ecx>=0
 					jmp		NxtUp
 				.endif
+				jmp		NotFoundUp
+			.endif
+		.endif
+		call	TstFind
+		.if al==0
+			jmp		FoundUp
+		.endif
+		.if !esi
+			dec		ecx
+			.if sdword ptr ecx>=0
+				jmp		NxtUp
 			.endif
 		.endif
 	.else

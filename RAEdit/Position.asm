@@ -759,8 +759,7 @@ SetCaretVisible proc uses ebx esi edi,hWin:DWORD,cpy:DWORD
 		.else
 			add		eax,[ebx].EDIT.fntinfo.fntht
 			sub		eax,cpy
-			sub		eax,ht
-			.if !CARRY?
+			.if eax>=ht
 				add		[esi].RAEDT.cpy,eax
 			.endif
 		.endif
