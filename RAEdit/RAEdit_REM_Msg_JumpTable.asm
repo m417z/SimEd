@@ -500,10 +500,11 @@
 			invoke GetLineFromCp,ebx,[ebx].EDIT.cpMin
 			invoke GetYpFromLine,ebx,eax
 			pop		edx
-			sub		eax,edx
-			jnb		@f
-			xor		eax,eax
-		  @@:
+			.if eax>edx
+				sub		eax,edx
+			.else
+				xor		eax,eax
+			.endif
 			mov		[esi].RAEDT.cpy,eax
 			invoke SetCaretVisible,[esi].RAEDT.hwnd,[esi].RAEDT.cpy
 			invoke InvalidateEdit,ebx,[esi].RAEDT.hwnd
@@ -979,8 +980,9 @@
 			test	[ebx].EDIT.nMode,MODE_BLOCK
 			.if !ZERO?
 				invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
-				or		eax,eax
-				jne		ErrBeep
+				.if eax!=0
+					jmp		ErrBeep
+				.endif
 				inc		nUndoid
 				mov		eax,[ebx].EDIT.blrg.lnMin
 				mov		edx,[ebx].EDIT.blrg.lnMax
@@ -1049,8 +1051,9 @@
 			test	[ebx].EDIT.nMode,MODE_BLOCK
 			.if ZERO?
 				invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
-				or		eax,eax
-				jne		ErrBeep
+				.if eax!=0
+					jmp		ErrBeep
+				.endif
 				.if wParam==CONVERT_TABTOSPACE || wParam==CONVERT_SPACETOTAB
 					invoke ConvertIndent,ebx,wParam
 				.else
