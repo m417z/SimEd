@@ -129,8 +129,9 @@ TstFind:
 	inc		ecx
   TstFind3:
 	mov		al,[esi]
-	or		al,al
-	je		TstFind2
+	.if al==0
+		jmp		TstFind2
+	.endif
 	mov		ah,[edi+ecx+sizeof CHARS]
 	.if fWhiteSpace
 		movzx	edx,al
@@ -155,13 +156,15 @@ TstFind:
 			jmp		TstFind3
 		.endif
 	.endif
-	cmp		al,ah
-	je		TstFind1
+	.if al==ah
+		jmp		TstFind1
+	.endif
 	.if !fMC
 		movzx	edx,al
 		mov		al,CaseTab[edx]
-		cmp		al,ah
-		je		TstFind1
+		.if al==ah
+			jmp		TstFind1
+		.endif
 	.endif
 	xor		eax,eax
 	dec		eax
@@ -181,7 +184,6 @@ TstFind:
 	.endif
 	pop		esi
 	pop		ecx
-	or		al,al
 	retn
 
 TstLnDown:
@@ -207,7 +209,9 @@ TstLnDown:
 				.endif
 			.endif
 			call	TstFind
-			je		Found
+			.if al==0
+				jmp		Found
+			.endif
 			.if !esi
 				inc		ecx
 				jmp		Nxt
@@ -251,15 +255,21 @@ TstLnUp:
 				movzx	eax,byte ptr [edi+ecx+sizeof CHARS-1]
 				.if byte ptr CharTab[eax]==CT_CHAR
 					dec		ecx
-					jge		NxtUp
+					.if sdword ptr ecx>=0
+						jmp		NxtUp
+					.endif
 					jmp		NotFoundUp
 				.endif
 			.endif
 			call	TstFind
-			je		FoundUp
+			.if al==0
+				jmp		FoundUp
+			.endif
 			.if !esi
 				dec		ecx
-				jge		NxtUp
+				.if sdword ptr ecx>=0
+					jmp		NxtUp
+				.endif
 			.endif
 		.endif
 	.else
@@ -383,8 +393,9 @@ TestLine:
 		.endif
 	.else
 		call	SkipSpc
-		or		eax,eax
-		jne		Nf
+		.if eax!=0
+			jmp		Nf
+		.endif
 	.endif
   Nxt:
 	mov		ax,[esi]
@@ -393,15 +404,17 @@ TestLine:
 			call	SkipCmnt
 			inc		esi
 			call	SkipWord
-			or		eax,eax
-			jne		Nf
+			.if eax!=0
+				jmp		Nf
+			.endif
 			mov		al,[esi]
 			.if al==' '
 				inc		esi
 				call	SkipSpc
 				call	SkipCmnt
-				or		eax,eax
-				jne		Nf
+				.if eax!=0
+					jmp		Nf
+				.endif
 			.endif
 		.elseif ax==' ?'
 			call	SkipCmnt
@@ -409,19 +422,22 @@ TestLine:
 			push	esi
 			call	TestWord
 			pop		esi
-			or		eax,eax
-			je		Found
+			.if eax==0
+				jmp		Found
+			.endif
 			dec		esi
 			call	SkipWord
-			or		eax,eax
-			jne		Nf
+			.if eax!=0
+				jmp		Nf
+			.endif
 			mov		al,[esi]
 			.if al==' '
 				inc		esi
 				call	SkipSpc
 				call	SkipCmnt
-				or		eax,eax
-				jne		Nf
+				.if eax!=0
+					jmp		Nf
+				.endif
 			.endif
 		.elseif al=='%'
 			call	SkipCmnt
@@ -516,15 +532,17 @@ TestLine:
 		.endif
 		call	SkipCmnt
 		call	TestWord
-		or		eax,eax
-		jne		Nf
+		.if eax!=0
+			jmp		Nf
+		.endif
 		xor		edx,edx
 	.else
 		call	SkipCmnt
 		.while ecx<[edi].CHARS.len
 			xor		edx,edx
-			cmp		al,[edi+ecx+sizeof CHARS]
-			.break .if ZERO?
+			.if al==[edi+ecx+sizeof CHARS]
+				.break
+			.endif
 			dec		edx
 			movzx	esi,byte ptr [edi+ecx+sizeof CHARS]
 			movzx	esi,byte ptr [esi+offset CharTab]
@@ -595,8 +613,9 @@ SkipSpc:
 					add		edi,[ebx].EDIT.hLine
 					mov		edi,[edi].LINE.rpChars
 					add		edi,[ebx].EDIT.hChars
-					test	[edi].CHARS.state,STATE_COMMENT
-					jne		SkipSpcNf
+					.if [edi].CHARS.state&STATE_COMMENT
+						jmp		SkipSpcNf
+					.endif
 					xor		ecx,ecx
 					jmp		SkipSpc
 				.else
@@ -677,8 +696,9 @@ SkipWord:
 	.endif
 TestWord:
 	mov		ax,[esi]
-	or		al,al
-	je		@f
+	.if al==0
+		jmp		@f
+	.endif
 	.if al==' '
 		mov		ax,[edi+ecx+sizeof CHARS]
 		.if al==' ' || al==VK_TAB
@@ -809,10 +829,12 @@ TestWord:
 	.if ah>='a' && ah<='z'
 		and		ah,5Fh
 	.endif
-	cmp		al,'$'
-	je		@f
-	cmp		al,ah
-	je		@b
+	.if al=='$'
+		jmp		@f
+	.endif
+	.if al==ah
+		jmp		@b
+	.endif
 	xor		eax,eax
 	dec		eax
 	retn
@@ -1323,8 +1345,9 @@ IsSelectionLocked proc uses ebx,hMem:DWORD,cpMin:DWORD,cpMax:DWORD
 		push	edx
 		invoke IsLineLocked,ebx,edx
 		pop		edx
-		or		eax,eax
-		jne		Ex
+		.if eax!=0
+			jmp		Ex
+		.endif
 		inc		edx
 	.endw
   Ex:
@@ -1364,7 +1387,9 @@ TrimSpace proc uses ebx edi,hMem:DWORD,nLine:DWORD,fLeft:DWORD
 				mov		al,[edi+ecx+sizeof CHARS-1]
 				.if al==' ' || al==VK_TAB
 					dec		ecx
-					jne		@b
+					.if ecx!=0
+						jmp @b
+					.endif
 				.endif
 				mov		eax,cp
 				add		eax,ecx
@@ -1652,8 +1677,9 @@ StreamIn proc uses ebx esi edi,hMem:DWORD,lParam:DWORD
 	mov		esi,hCMem
 	add		esi,MAXSTREAM
 	call	ReadChars
-	or		eax,eax
-	jne		@f
+	.if eax!=0
+		jmp		@f
+	.endif
 	.if dwRead
 		.if !fUnicode
 			movzx	eax,word ptr [esi]
@@ -1728,20 +1754,24 @@ StreamOut proc uses ebx esi edi,hMem:DWORD,lParam:DWORD
 		call	StreamAnsi
 	  @@:
 		call	FillCMem
-		or		ecx,ecx
-		je		Ex
+		.if ecx==0
+			jmp		Ex
+		.endif
 		call	StreamUnicode
-		or		eax,eax
-		je		@b
+		.if eax==0
+			jmp		@b
+		.endif
 	.else
 		; Save as ansi
 	  @@:
 		call	FillCMem
-		or		ecx,ecx
-		je		Ex
+		.if ecx==0
+			jmp		Ex
+		.endif
 		call	StreamAnsi
-		or		eax,eax
-		je		@b
+		.if eax==0
+			jmp		@b
+		.endif
 	.endif
   Ex:
 	invoke GlobalUnlock,hCMem
@@ -2205,8 +2235,9 @@ BracketMatch proc uses ebx,hMem:DWORD,nChr:DWORD,cp:DWORD
 			push	ecx
 			invoke IsCharPos,ebx,cp
 			pop		ecx
-			or		eax,eax
-			jne		Ex
+			.if eax!=0
+				jmp		Ex
+			.endif
 			movzx	eax,byte ptr bracketend[ecx]
 			invoke BracketMatchRight,ebx,nChr,eax,cp
 			mov		[ebx].EDIT.cpbren,eax
@@ -2225,8 +2256,9 @@ BracketMatch proc uses ebx,hMem:DWORD,nChr:DWORD,cp:DWORD
 			push	ecx
 			invoke IsCharPos,ebx,cp
 			pop		ecx
-			or		eax,eax
-			jne		Ex
+			.if eax!=0
+				jmp		Ex
+			.endif
 			movzx	eax,byte ptr bracketstart[ecx]
 			invoke BracketMatchLeft,ebx,nChr,eax,cp
 			mov		[ebx].EDIT.cpbrst,eax
