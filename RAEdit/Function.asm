@@ -1739,14 +1739,16 @@ StreamIn proc uses ebx esi edi,hMem:DWORD,lParam:DWORD
 ReadChars:
 	mov		edx,lParam
 	mov		[edx].EDITSTREAM.dwError,0
+	;	lea		eax,dwRead
+	;	push	eax
+	;	mov		eax,MAXSTREAM
+	;	push	eax
+	;	mov		eax,esi
+	;	push	eax
+	;	push	[edx].EDITSTREAM.dwCookie
+	;	call	[edx].EDITSTREAM.pfnCallback
 	lea		eax,dwRead
-	push	eax
-	mov		eax,MAXSTREAM
-	push	eax
-	mov		eax,esi
-	push	eax
-	push	[edx].EDITSTREAM.dwCookie
-	call	[edx].EDITSTREAM.pfnCallback
+	invoke EDITSTREAMCALLBACKPTR ptr [edx].EDITSTREAM.pfnCallback,[edx].EDITSTREAM.dwCookie,esi,MAXSTREAM,eax
 	retn
 
 StreamIn endp
@@ -1799,29 +1801,37 @@ StreamUnicode:
 	invoke MultiByteToWideChar,CP_ACP,0,hCMem,nChars,eax,MAXSTREAM+1024
 	mov		edx,lParam
 	mov		[edx].EDITSTREAM.dwError,0
+	;	lea		eax,dwWrite
+	;	push	eax
+	;	mov		eax,nChars
+	;	shl		eax,1
+	;	push	eax
+	;	mov		eax,hCMem
+	;	add		eax,MAXSTREAM+1024
+	;	push	eax
+	;	mov		eax,[edx].EDITSTREAM.dwCookie
+	;	push	eax
+	;	call	[edx].EDITSTREAM.pfnCallback
 	lea		eax,dwWrite
-	push	eax
-	mov		eax,nChars
-	shl		eax,1
-	push	eax
-	mov		eax,hCMem
-	add		eax,MAXSTREAM+1024
-	push	eax
-	mov		eax,[edx].EDITSTREAM.dwCookie
-	push	eax
-	call	[edx].EDITSTREAM.pfnCallback
+	mov		ecx,nChars
+	shl		ecx,1
+	mov		edx,hCMem
+	add		edx,MAXSTREAM+1024
+	invoke EDITSTREAMCALLBACKPTR ptr [edx].EDITSTREAM.pfnCallback,[edx].EDITSTREAM.dwCookie,edx,ecx,eax
 	retn
 
 StreamAnsi:
 	mov		edx,lParam
 	mov		[edx].EDITSTREAM.dwError,0
+	;	lea		eax,dwWrite
+	;	push	eax
+	;	push	nChars
+	;	push	hCMem
+	;	mov		eax,[edx].EDITSTREAM.dwCookie
+	;	push	eax
+	;	call	[edx].EDITSTREAM.pfnCallback
 	lea		eax,dwWrite
-	push	eax
-	push	nChars
-	push	hCMem
-	mov		eax,[edx].EDITSTREAM.dwCookie
-	push	eax
-	call	[edx].EDITSTREAM.pfnCallback
+	invoke EDITSTREAMCALLBACKPTR ptr [edx].EDITSTREAM.pfnCallback,[edx].EDITSTREAM.dwCookie,hCMem,nChars,eax
 	retn
 
 FillCMem:
