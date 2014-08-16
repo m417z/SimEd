@@ -93,14 +93,14 @@ EditCopyBlock proc uses ebx esi,hMem:DWORD,lpCMem:DWORD
 	mov		esi,lpCMem
 	mov		edx,blrg.lnMin
 	.while edx<=blrg.lnMax
-		call	CopyBlockLine
+		call	NestedProc_CopyBlockLine
 		inc		edx
 	.endw
 	mov		eax,esi
 	sub		eax,lpCMem
 	ret
 
-CopyBlockChar:
+NestedProc_CopyBlockChar:
 	invoke GetBlockCp,ebx,edx,eax
 	invoke GetChar,ebx,eax
 	.if eax==VK_RETURN || eax==VK_TAB
@@ -110,12 +110,12 @@ CopyBlockChar:
 	inc		esi
 	retn
 
-CopyBlockLine:
+NestedProc_CopyBlockLine:
 	mov		eax,blrg.clMin
 	.while eax<blrg.clMax
 		push	eax
 		push	edx
-		call	CopyBlockChar
+		call	NestedProc_CopyBlockChar
 		pop		edx
 		pop		eax
 		inc		eax
@@ -213,20 +213,20 @@ EditPaste proc uses ebx,hMem:DWORD,hData:DWORD
 	mov		ebx,hMem
 	mov		eax,hData
 	.if eax
-		call	InsertMem
+		call	NestedProc_InsertMem
 	.else
 		invoke OpenClipboard,[ebx].EDIT.hwnd
 		.if eax
 			invoke GetClipboardData,CF_TEXT
 			.if eax
-				call	InsertMem
+				call	NestedProc_InsertMem
 			.endif
 			invoke CloseClipboard
 		.endif
 	.endif
 	ret
 
-InsertMem:
+NestedProc_InsertMem:
 	push	eax
 	invoke GlobalLock,eax
 	push	[ebx].EDIT.fOvr
@@ -254,13 +254,13 @@ EditPasteBlock proc uses ebx esi edi,hMem:DWORD,hData:DWORD
 	invoke GetBlockRange,addr [ebx].EDIT.blrg,addr blrg
 	mov		eax,hData
 	.if eax
-		call	InsertMem
+		call	NestedProc_InsertMem
 	.else
 		invoke OpenClipboard,[ebx].EDIT.hwnd
 		.if eax
 			invoke GetClipboardData,CF_TEXT
 			.if eax
-				call	InsertMem
+				call	NestedProc_InsertMem
 			.endif
 			invoke CloseClipboard
 			mov		eax,blrg.lnMin
@@ -273,7 +273,7 @@ EditPasteBlock proc uses ebx esi edi,hMem:DWORD,hData:DWORD
 	.endif
 	ret
 
-InsertMem:
+NestedProc_InsertMem:
 	push	eax
 	invoke GlobalLock,eax
 	mov		esi,eax
@@ -486,7 +486,7 @@ ConvertIndent proc uses ebx esi edi,hMem:DWORD,nFunction:DWORD
 	mov		hLMem,eax
 	invoke EditCopyNoLF,ebx,edi
 	.while byte ptr [edi]
-		call	GetIndent
+		call	NestedProc_GetIndent
 		.if edx
 			mov		len,edx
 			mov		esi,hLMem
@@ -549,7 +549,7 @@ ConvertIndent proc uses ebx esi edi,hMem:DWORD,nFunction:DWORD
 			mov		[ebx].EDIT.cpMax,eax
 			invoke EditPaste,ebx,esi
 		.endif
-		call	NextLine
+		call	NestedProc_NextLine
 	.endw
 	invoke GlobalFree,hLMem
 	invoke GlobalFree,hCMem
@@ -560,7 +560,7 @@ ConvertIndent proc uses ebx esi edi,hMem:DWORD,nFunction:DWORD
 	inc		nUndoid
 	ret
 
-NextLine:
+NestedProc_NextLine:
 	.while byte ptr [edi] && byte ptr [edi]!=VK_RETURN
 		inc		edi
 	.endw
@@ -569,7 +569,7 @@ NextLine:
 	.endif
 	retn
 
-GetIndent:
+NestedProc_GetIndent:
 	xor		edx,edx
 	.while byte ptr [edi+edx]==VK_SPACE || byte ptr [edi+edx]==VK_TAB
 		inc		edx

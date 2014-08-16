@@ -365,13 +365,13 @@ GetUndo proc uses ebx esi edi,hMem:DWORD,nCount:DWORD,lpMem:DWORD
 		mov		[edi],eax
 		lea		edi,[edi+4]
 		.while edx<rpend
-			call	GetHeader
-			call	GetData
+			call	NestedProc_GetHeader
+			call	NestedProc_GetData
 			mov		ecx,[esi+edx].RAUNDO.cb
 			lea		edi,[edi+ecx+sizeof RAUNDO]
 			lea		edx,[edx+ecx+sizeof RAUNDO]
 		.endw
-		call	GetHeader
+		call	NestedProc_GetHeader
 		mov		[edi].RAUNDO.undoid,0
 		mov		[edi].RAUNDO.cp,0
 		mov		[edi].RAUNDO.cb,0
@@ -382,7 +382,7 @@ GetUndo proc uses ebx esi edi,hMem:DWORD,nCount:DWORD,lpMem:DWORD
 	add		eax,sizeof RAUNDO+4
 	ret
 
-GetHeader:
+NestedProc_GetHeader:
 	xor		ecx,ecx
 	.while ecx<sizeof RAUNDO
 		lea		eax,[edx+ecx]
@@ -395,7 +395,7 @@ GetHeader:
 	mov		[edi].RAUNDO.rpPrev,eax
 	retn
 
-GetData:
+NestedProc_GetData:
 	xor		ecx,ecx
 	.while ecx<[esi+edx].RAUNDO.cb
 		lea		eax,[edx+ecx]

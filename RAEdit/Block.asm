@@ -20,13 +20,13 @@ GetBlock proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,lpBlockDef:DWORD
 		mov		edi,[edi].LINE.rpChars
 		add		edi,[ebx].EDIT.hChars
 		xor		ecx,ecx
-		call	SkipWhSp
+		call	NestedProc_SkipWhSp
 		mov		al,[esi]
 		.if al=='$'
 			;$ endp
 			mov		nNest,0
 			lea		edx,buffer
-			call	CopyWrd
+			call	NestedProc_CopyWrd
 			mov		byte ptr [edx],' '
 			inc		edx
 		  @@:
@@ -37,12 +37,12 @@ GetBlock proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,lpBlockDef:DWORD
 			.endif
 			invoke lstrcpy,edx,esi
 			lea		esi,buffer
-			call	TestBlock
+			call	NestedProc_TestBlock
 		.elseif al=='?'
 			;? endp
 			mov		nNest,0
 			lea		edx,buffer
-			call	CopyWrd
+			call	NestedProc_CopyWrd
 			mov		byte ptr [edx],' '
 			inc		edx
 		  @@:
@@ -54,10 +54,10 @@ GetBlock proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,lpBlockDef:DWORD
 			invoke lstrcpy,edx,esi
 			push	esi
 			lea		esi,buffer
-			call	TestBlock
+			call	NestedProc_TestBlock
 			pop		esi
 			.if eax==-1
-				call	TestBlock
+				call	NestedProc_TestBlock
 			.endif
 		.else
 			push	ecx
@@ -85,14 +85,14 @@ GetBlock proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,lpBlockDef:DWORD
 			  @@:
 				mov		byte ptr [edx],' '
 				inc		edx
-				call	SkipWrd
-				call	SkipWhSp
-				call	CopyWrd
+				call	NestedProc_SkipWrd
+				call	NestedProc_SkipWhSp
+				call	NestedProc_CopyWrd
 				lea		esi,buffer
-				call	TestBlock
+				call	NestedProc_TestBlock
 			.else
 				;endp
-				call TestBlock
+				call NestedProc_TestBlock
 			.endif
 		.endif
 	.else
@@ -140,7 +140,7 @@ GetBlock proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,lpBlockDef:DWORD
 	.endif
 	ret
 
-TestBlock:
+NestedProc_TestBlock:
 	mov		nLines,0
 	mov		edi,nLine
 	.while TRUE
@@ -231,7 +231,7 @@ TestBlock:
 	.endif
 	retn
 
-SkipWhSp:
+NestedProc_SkipWhSp:
 	dec		ecx
   @@:
 	inc		ecx
@@ -248,7 +248,7 @@ SkipWhSp:
   @@:
 	retn
 
-SkipWrd:
+NestedProc_SkipWrd:
 	dec		ecx
   @@:
 	inc		ecx
@@ -268,7 +268,7 @@ SkipWrd:
   @@:
 	retn
 
-CopyWrd:
+NestedProc_CopyWrd:
   @@:
 	.if ecx>=[edi].CHARS.len
 		jmp		@f
@@ -1216,7 +1216,7 @@ SetCommentBlocks proc uses ebx esi edi,hMem:DWORD,lpStart:DWORD,lpEnd:DWORD
 			push	[esi].CHARS.state
 			mov		edx,lpStart
 			mov		ax,[edx]
-			call	IsLineStart
+			call	NestedProc_IsLineStart
 			.if !eax
 				inc		nCmnt
 				inc		fCmnt
@@ -1231,7 +1231,7 @@ SetCommentBlocks proc uses ebx esi edi,hMem:DWORD,lpStart:DWORD,lpEnd:DWORD
 			mov		fCmnt,0
 			.if nCmnt
 				mov		edx,lpEnd
-				call	IsLineEnd
+				call	NestedProc_IsLineEnd
 				.if !eax
 					dec		nCmnt
 				.endif
@@ -1249,7 +1249,7 @@ SetCommentBlocks proc uses ebx esi edi,hMem:DWORD,lpStart:DWORD,lpEnd:DWORD
 	.endif
 	ret
 
-TestWrd:
+NestedProc_TestWrd:
 	push	ecx
 	push	edx
 	dec		ecx
@@ -1293,7 +1293,7 @@ TestWrd1:
 	xor		eax,eax
 	retn
 
-IsLineStart:
+NestedProc_IsLineStart:
 	xor		ecx,ecx
 	dec		ecx
 	mov		eax,ecx
@@ -1316,22 +1316,22 @@ IsLineStart:
 	.endif
 	.if [ebx].EDIT.ccmntblocks && [ebx].EDIT.ccmntblocks!=4
 		.while ecx<[esi].CHARS.len
-			call	TestWrd
+			call	NestedProc_TestWrd
 			inc		ecx
 		  .if !eax
 		  	.break
 		  .endif
 		.endw
 	.else
-		call	TestWrd
+		call	NestedProc_TestWrd
 		inc		ecx
 	.endif
   @@:
 	retn
 
-IsLineEnd:
+NestedProc_IsLineEnd:
 	.while ecx<[esi].CHARS.len
-		call	TestWrd
+		call	NestedProc_TestWrd
 		inc		ecx
 	  .if !eax
 	  	.break

@@ -381,13 +381,13 @@ GetBlockRects proc uses ebx esi edi,hMem:DWORD,lpRects:DWORD
 	invoke GetBlockRange,addr [ebx].EDIT.blrg,addr blrg
 	mov		edi,lpRects
 	lea		esi,[ebx].EDIT.edta
-	call	GetRect
+	call	NestedProc_GetRect
 	add		edi,sizeof RECT
 	lea		esi,[ebx].EDIT.edtb
-	call	GetRect
+	call	NestedProc_GetRect
 	ret
 
-GetRect:
+NestedProc_GetRect:
 	invoke GetYpFromLine,ebx,blrg.lnMin
 	sub		eax,[esi].RAEDT.cpy
 	mov		[edi].RECT.top,eax
@@ -432,15 +432,15 @@ InvalidateBlock proc uses ebx esi edi,hMem:DWORD,lpOldRects:DWORD
 	sub		eax,[ebx].EDIT.edta.rc.top
 	.if eax
 		mov		eax,[ebx].EDIT.edta.hwnd
-		call	DoRect
+		call	NestedProc_DoRect
 	.endif
 	add		esi,sizeof RECT
 	add		edi,sizeof RECT
 	mov		eax,[ebx].EDIT.edtb.hwnd
-	call	DoRect
+	call	NestedProc_DoRect
 	ret
 
-DoRect:
+NestedProc_DoRect:
 	push	ebx
 	mov		ebx,eax
 	;Left part

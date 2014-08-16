@@ -219,7 +219,7 @@ SetHiliteWords proc public uses esi edi,nColor:DWORD,lpWords:DWORD
 				jmp		NxtWrd1
 			.endif
 			push	eax
-			call	TestWord
+			call	NestedProc_TestWord
 			mov		ecx,eax
 			pop		eax
 			.if ecx!=0
@@ -264,7 +264,7 @@ SetHiliteWords proc public uses esi edi,nColor:DWORD,lpWords:DWORD
 	.endif
 	ret
 
-GetLen:
+NestedProc_GetLen:
 	xor		ecx,ecx
   @@:
 	mov		al,[esi+ecx]
@@ -275,9 +275,9 @@ GetLen:
 	mov		len,ecx
 	retn
 
-TestWord:
+NestedProc_TestWord:
 	push	edi
-	call	GetLen
+	call	NestedProc_GetLen
 	movzx	eax,byte ptr [esi]
 	.if eax>='a' && eax<='z' && fEnd!=3
 		and		eax,5Fh
@@ -413,7 +413,7 @@ SetBlockDef proc public uses ebx esi edi,lpRABLOCKDEF:DWORD
 			invoke strlen,eax
 			pop		ecx
 
-			call	TestString
+			call	NestedProc_TestString
 			inc		eax
 			mov		byte ptr [ecx+eax],0
 
@@ -428,7 +428,7 @@ SetBlockDef proc public uses ebx esi edi,lpRABLOCKDEF:DWORD
 			pop		eax
 			invoke strlen,eax
 			pop		ecx
-			call	TestString
+			call	NestedProc_TestString
 			inc		eax
 			mov		byte ptr [ecx+eax],0
 			lea		ecx,[ecx+eax+1]
@@ -460,7 +460,7 @@ SetBlockDef proc public uses ebx esi edi,lpRABLOCKDEF:DWORD
   Ex:
 	ret
 
-TestString:
+NestedProc_TestString:
 	push	ecx
 	.while byte ptr [ecx]
 		.if byte ptr [ecx]=='|'
@@ -1572,7 +1572,7 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 					.endif
 				.endif
 			.endif
-			call	SetScroll
+			call	NestedProc_SetScroll
 		.endif
 		xor		eax,eax
 		jmp		Ex
@@ -2084,7 +2084,7 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 				;Block Selection, not on selbar
 				mov		fShift,TRUE
 				xor		eax,eax
-				call	SetBlock
+				call	NestedProc_SetBlock
 				invoke SelChange,ebx,SEL_TEXT
 			.endif
 		.elseif fOnSel==2
@@ -2450,7 +2450,7 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 					mov		fSelState,10
 					invoke GetCursorPos,addr pt
 					invoke ScreenToClient,hWin,addr pt
-					call	SetBlock
+					call	NestedProc_SetBlock
 					invoke SetCapture,hWin
 					invoke SetFocus,hWin
 				.endif
@@ -2780,7 +2780,7 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
   Ex:
 	ret
 
-SetBlock:
+NestedProc_SetBlock:
 	invoke GetBlockRects,ebx,addr oldrects
 	mov		eax,pt.y
 	.if sdword ptr eax<0
@@ -2824,7 +2824,7 @@ ErrBeep:
 	xor		eax,eax
 	ret
 
-SetScroll:
+NestedProc_SetScroll:
 	mov		sinf.cbSize,sizeof sinf
 	mov		sinf.fMask,SIF_ALL
 	mov		sinf.nMin,0
@@ -3474,7 +3474,7 @@ RAWndProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 					mov		[ebx].EDIT.edtb.cpy,eax
 				.endif
 			.endif
-			call	SizeIt
+			call	NestedProc_SizeIt
 			invoke SetFocus,[ebx].EDIT.edtb.hwnd
 			invoke SetCaretVisible,[ebx].EDIT.edtb.hwnd,[ebx].EDIT.edtb.cpy
 			ret
@@ -4324,7 +4324,7 @@ RAWndProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 			.endif
 			.if eax
 				mov		edx,lParam
-				call SetToolTip
+				call NestedProc_SetToolTip
 			.endif
 			ret
 		align 4
@@ -5192,8 +5192,8 @@ align 4
 	.elseif eax==WM_SETTEXT
 		;wParam=0
 		;lParam=lpszText
-		call	RelMem
-		call	AllocMem
+		call	NestedProc_RelMem
+		call	NestedProc_AllocMem
 		invoke EditInsert,ebx,0,lParam
 		xor		eax,eax
 		mov		[ebx].EDIT.edta.cpy,eax
@@ -5299,7 +5299,7 @@ align 4
 				div		ecx
 			.endif
 			mov		[ebx].EDIT.fsplitt,eax
-			call	SizeIt
+			call	NestedProc_SizeIt
 			invoke UpdateWindow,[ebx].EDIT.hsbtn
 			invoke UpdateWindow,[ebx].EDIT.edta.hwnd
 			invoke UpdateWindow,[ebx].EDIT.edtb.hwnd
@@ -5313,7 +5313,7 @@ align 4
 		.if [ebx].EDIT.fresize
 			mov		[ebx].EDIT.fresize,0
 			invoke ReleaseCapture
-			call	SizeIt
+			call	NestedProc_SizeIt
 			.if [ebx].EDIT.fsplitt==0
 				invoke SetFocus,[ebx].EDIT.edtb.hwnd
 			.endif
@@ -5344,7 +5344,7 @@ align 4
 		mov		[ebx].EDIT.fstyle,eax
 		invoke GetWindowLong,[ebx].EDIT.hwnd,GWL_ID
 		mov		[ebx].EDIT.ID,eax
-		call	AllocMem
+		call	NestedProc_AllocMem
 		mov		[ebx].EDIT.nlinenrwt,LNRWT
 		mov		[ebx].EDIT.linenrwt,0
 		mov		[ebx].EDIT.selbarwt,SELWT
@@ -5380,7 +5380,7 @@ align 4
 		invoke CreateWindowEx,1,addr szStatic,NULL,SS_NOTIFY or WS_CHILD or WS_VISIBLE,0,0,0,0,hWin,-1,hInstance,0
 		mov		[ebx].EDIT.hsbtn,eax
 		mov		edx,offset szSplitterBar
-		call	SetToolTip
+		call	NestedProc_SetToolTip
 		invoke SetWindowLong,[ebx].EDIT.hsbtn,GWL_WNDPROC,addr SplittBtnProc
 		mov		OldSplittBtnProc,eax
 
@@ -5405,7 +5405,7 @@ align 4
 		invoke CreateWindowEx,NULL,addr szStatic,NULL,SS_NOTIFY or WS_CHILD or WS_VISIBLE,0,0,0,0,hWin,NULL,hInstance,0
 		mov		[ebx].EDIT.hsta,eax
 		mov		edx,offset szChanged
-		call	SetToolTip
+		call	NestedProc_SetToolTip
 		invoke SetWindowLong,[ebx].EDIT.hsta,GWL_USERDATA,ebx
 		invoke SetWindowLong,[ebx].EDIT.hsta,GWL_WNDPROC,addr StateProc
 		mov		OldStateProc,eax
@@ -5421,25 +5421,25 @@ align 4
 		invoke CreateWindowEx,NULL,addr szButton,NULL,BS_BITMAP or BS_PUSHLIKE or BS_AUTOCHECKBOX or WS_CHILD or WS_VISIBLE,0,0,0,0,hWin,-2,hInstance,0
 		mov		[ebx].EDIT.hlin,eax
 		mov		edx,offset szLineNumber
-		call	SetToolTip
+		call	NestedProc_SetToolTip
 		invoke SendMessage,[ebx].EDIT.hlin,BM_SETIMAGE,IMAGE_BITMAP,hBmpLnr
 
 		invoke CreateWindowEx,NULL,addr szButton,NULL,BS_BITMAP or BS_PUSHBUTTON or WS_CHILD or WS_VISIBLE,0,0,0,0,hWin,-3,hInstance,0
 		mov		[ebx].EDIT.hexp,eax
 		mov		edx,offset szExpand
-		call	SetToolTip
+		call	NestedProc_SetToolTip
 		invoke SendMessage,[ebx].EDIT.hexp,BM_SETIMAGE,IMAGE_BITMAP,hBmpExp
 
 		invoke CreateWindowEx,NULL,addr szButton,NULL,BS_BITMAP or BS_PUSHBUTTON or WS_CHILD or WS_VISIBLE,0,0,0,0,hWin,-4,hInstance,0
 		mov		[ebx].EDIT.hcol,eax
 		mov		edx,offset szCollapse
-		call	SetToolTip
+		call	NestedProc_SetToolTip
 		invoke SendMessage,[ebx].EDIT.hcol,BM_SETIMAGE,IMAGE_BITMAP,hBmpCol
 
 		invoke CreateWindowEx,NULL,addr szButton,NULL,BS_BITMAP or BS_PUSHLIKE or BS_AUTOCHECKBOX or WS_CHILD or WS_VISIBLE,0,0,0,0,hWin,-5,hInstance,0
 		mov		[ebx].EDIT.hlock,eax
 		mov		edx,offset szLock
-		call	SetToolTip
+		call	NestedProc_SetToolTip
 		invoke SendMessage,[ebx].EDIT.hlock,BM_SETIMAGE,IMAGE_BITMAP,hBmpLck
 
 		invoke SetWindowPos,[ebx].EDIT.hsta,HWND_TOP,0,0,0,0,SWP_NOSIZE or SWP_NOSIZE;SWP_NOREPOSITION
@@ -5470,7 +5470,7 @@ align 4
 		invoke DestroyWindow,[ebx].EDIT.edtb.hwnd
 		invoke DestroyBrushes,ebx
 		;Free memory
-		call	RelMem
+		call	NestedProc_RelMem
 		invoke GetProcessHeap
 		invoke HeapFree,eax,0,ebx
 	.elseif eax==WM_SETFOCUS
@@ -5496,7 +5496,7 @@ align 4
 				mov		[ebx].EDIT.linenrwt,0
 			.endif
 			invoke SetFocus,[ebx].EDIT.focus
-			call	SizeIt
+			call	NestedProc_SizeIt
 			invoke InvalidateEdit,ebx,[ebx].EDIT.edta.hwnd
 			invoke InvalidateEdit,ebx,[ebx].EDIT.edtb.hwnd
 		.elseif ax==-3
@@ -5534,7 +5534,7 @@ align 4
 			mov		eax,SBWT
 			sub		[ebx].EDIT.rc.bottom,eax
 		.endif
-		call	SizeIt
+		call	NestedProc_SizeIt
 		xor		edi,edi
 		.if !([ebx].EDIT.fstyle&STYLE_NOLINENUMBER)
 			invoke MoveWindow,[ebx].EDIT.hlin,0,[ebx].EDIT.rc.bottom,BTNWT,SBWT,TRUE
@@ -5681,7 +5681,7 @@ ErrBeep:
 	xor		eax,eax
 	ret
 
-SetToolTip:
+NestedProc_SetToolTip:
 	mov		ti.cbSize,sizeof TOOLINFO
 	mov		ti.uFlags,TTF_IDISHWND or TTF_SUBCLASS
 	mov		ti.hWnd,0
@@ -5692,7 +5692,7 @@ SetToolTip:
 	invoke SendMessage,[ebx].EDIT.htt,TTM_ADDTOOL,NULL,addr ti
 	retn
 
-SizeIt:
+NestedProc_SizeIt:
 	mov		eax,[ebx].EDIT.fsplitt
 	.if eax
 		mov		ecx,eax
@@ -5736,7 +5736,7 @@ SizeIt:
 	.endif
 	retn
 
-AllocMem:
+NestedProc_AllocMem:
 	invoke HeapCreate,HEAP_GENERATE_EXCEPTIONS,256*1024,0
 	mov		[ebx].EDIT.hHeap,eax
 	;Line
@@ -5784,7 +5784,7 @@ AllocMem:
 
 	retn
 
-RelMem:
+NestedProc_RelMem:
 	;Free memory
 	.if [ebx].EDIT.hHeap
 		invoke HeapDestroy,[ebx].EDIT.hHeap

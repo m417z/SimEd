@@ -381,7 +381,7 @@ GetCpFromXp proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,x:DWORD,fNoAdjust:DWO
   @@:
 	push	ecx
 	push	edx
-	call	TestIt
+	call	NestedProc_TestIt
 	pop		edx
 	pop		ecx
 	shr		edx,1
@@ -412,7 +412,7 @@ GetCpFromXp proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,x:DWORD,fNoAdjust:DWO
 		.endif
 		push	rect.right
 		inc		edi
-		call	TestIt
+		call	NestedProc_TestIt
 		dec		edi
 		pop		edx
 		.if !fNoAdjust
@@ -432,7 +432,7 @@ GetCpFromXp proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,x:DWORD,fNoAdjust:DWO
 	mov		eax,edi
 	ret
 
-TestIt:
+NestedProc_TestIt:
 	invoke GetTextWidth,ebx,hDC,addr [esi+sizeof CHARS],edi,addr rect
 	mov		eax,rect.right
 	retn

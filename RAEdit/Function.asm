@@ -58,7 +58,7 @@ FindTheText proc uses ebx esi edi,hMem:DWORD,pFind:DWORD,fMC:DWORD,fWW:DWORD,fWh
 			push	nLine
 			xor		esi,esi
 			.while len[esi*4]
-				call	TstLnDown
+				call	NestedProc_TstLnDown
 				.if eax==-1
 					.break
 				.endif
@@ -94,7 +94,7 @@ FindTheText proc uses ebx esi edi,hMem:DWORD,pFind:DWORD,fMC:DWORD,fWW:DWORD,fWh
 			push	nLine
 			xor		esi,esi
 			.while len[esi*4]
-				call	TstLnUp
+				call	NestedProc_TstLnUp
 				.if eax==-1
 					.break
 				.endif
@@ -127,7 +127,7 @@ FindTheText proc uses ebx esi edi,hMem:DWORD,pFind:DWORD,fMC:DWORD,fWW:DWORD,fWh
 	mov		edx,nIgnore
 	ret
 
-TstFind:
+NestedProc_TstFind:
 	mov		prev,1
 	push	ecx
 	push	esi
@@ -196,7 +196,7 @@ TstFind:
 	pop		ecx
 	retn
 
-TstLnDown:
+NestedProc_TstLnDown:
 	mov		edi,nLine
 	shl		edi,2
 	.if edi<[ebx].EDIT.rpLineFree
@@ -218,7 +218,7 @@ TstLnDown:
 					jmp		Nxt
 				.endif
 			.endif
-			call	TstFind
+			call	NestedProc_TstFind
 			.if al==0
 				jmp		Found
 			.endif
@@ -247,7 +247,7 @@ TstLnDown:
 	mov		eax,cpMin
 	retn
 
-TstLnUp:
+NestedProc_TstLnUp:
 	mov		edi,nLine
 	shl		edi,2
 	.if edi<[ebx].EDIT.rpLineFree
@@ -278,7 +278,7 @@ TstLnUp:
 				jmp		NotFoundUp
 			.endif
 		.endif
-		call	TstFind
+		call	NestedProc_TstFind
 		.if al==0
 			jmp		FoundUp
 		.endif
@@ -384,11 +384,11 @@ IsLine proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,lpszTest:DWORD
 	.if edi<[ebx].EDIT.rpLineFree && byte ptr [esi]
 		mov		edi,nLine
 		shl		edi,2
-		call	TestLine
+		call	NestedProc_TestLine
 	.endif
 	ret
 
-TestLine:
+NestedProc_TestLine:
 	xor		ecx,ecx
 	mov		fCmnt,ecx
 	add		edi,[ebx].EDIT.hLine
@@ -402,7 +402,7 @@ TestLine:
 			jmp		Nf
 		.endif
 	.else
-		call	SkipSpc
+		call	NestedProc_SkipSpc
 		.if eax!=0
 			jmp		Nf
 		.endif
@@ -411,48 +411,48 @@ TestLine:
 	mov		ax,[esi]
 	.if ah
 		.if ax==' $'
-			call	SkipCmnt
+			call	NestedProc_SkipCmnt
 			inc		esi
-			call	SkipWord
+			call	NestedProc_SkipWord
 			.if eax!=0
 				jmp		Nf
 			.endif
 			mov		al,[esi]
 			.if al==' '
 				inc		esi
-				call	SkipSpc
-				call	SkipCmnt
+				call	NestedProc_SkipSpc
+				call	NestedProc_SkipCmnt
 				.if eax!=0
 					jmp		Nf
 				.endif
 			.endif
 		.elseif ax==' ?'
-			call	SkipCmnt
+			call	NestedProc_SkipCmnt
 			add		esi,2
 			push	esi
-			call	TestWord
+			call	NestedProc_TestWord
 			pop		esi
 			.if eax==0
 				jmp		Found
 			.endif
 			dec		esi
-			call	SkipWord
+			call	NestedProc_SkipWord
 			.if eax!=0
 				jmp		Nf
 			.endif
 			mov		al,[esi]
 			.if al==' '
 				inc		esi
-				call	SkipSpc
-				call	SkipCmnt
+				call	NestedProc_SkipSpc
+				call	NestedProc_SkipCmnt
 				.if eax!=0
 					jmp		Nf
 				.endif
 			.endif
 		.elseif al=='%'
-			call	SkipCmnt
+			call	NestedProc_SkipCmnt
 			inc		esi
-			call	OptSkipWord
+			call	NestedProc_OptSkipWord
 			jmp		Nxt
 		.elseif ax=="'/"
 			; comment init
@@ -460,7 +460,7 @@ TestLine:
 				movzx	eax,byte ptr [edi+ecx+sizeof CHARS]
 				movzx	eax,byte ptr [eax+offset CharTab]
 				.if eax==CT_STRING
-					call	SkipString
+					call	NestedProc_SkipString
 				.elseif word ptr [edi+ecx+sizeof CHARS]=="'/"
 					inc		ecx
 					inc		fCmnt
@@ -483,7 +483,7 @@ TestLine:
 				movzx	eax,byte ptr [edi+ecx+sizeof CHARS]
 				movzx	eax,byte ptr [eax+offset CharTab]
 				.if eax==CT_STRING
-					call	SkipString
+					call	NestedProc_SkipString
 				.elseif word ptr [edi+ecx+sizeof CHARS]=="/'"
 					.if [edi].CHARS.state&STATE_COMMENT
 						dec		fCmnt
@@ -508,7 +508,7 @@ TestLine:
 				movzx	esi,byte ptr [edi+ecx+sizeof CHARS]
 				movzx	esi,byte ptr [esi+offset CharTab]
 				.if esi==CT_STRING
-					call	SkipString
+					call	NestedProc_SkipString
 				.elseif word ptr [edi+ecx+sizeof CHARS]=="*/"
 					inc		ecx
 					inc		fCmnt
@@ -539,14 +539,14 @@ TestLine:
 			.endif
 			jmp		Nf
 		.endif
-		call	SkipCmnt
-		call	TestWord
+		call	NestedProc_SkipCmnt
+		call	NestedProc_TestWord
 		.if eax!=0
 			jmp		Nf
 		.endif
 		xor		edx,edx
 	.else
-		call	SkipCmnt
+		call	NestedProc_SkipCmnt
 		.while ecx<[edi].CHARS.len
 			xor		edx,edx
 			.if al==[edi+ecx+sizeof CHARS]
@@ -564,7 +564,7 @@ TestLine:
 					.break
 				.endif
 			.elseif esi==CT_STRING
-				call	SkipString
+				call	NestedProc_SkipString
 			.endif
 			inc		ecx
 		.endw
@@ -576,7 +576,7 @@ TestLine:
 	mov		eax,-1
 	retn
 
-SkipString:
+NestedProc_SkipString:
 	push	eax
 	mov		al,[edi+ecx+sizeof CHARS]
 	inc		ecx
@@ -589,7 +589,7 @@ SkipString:
 	pop		eax
 	retn
 
-SkipCmnt:
+NestedProc_SkipCmnt:
 	.if word ptr [edi+ecx+sizeof CHARS]=="'/"
 		push	eax
 		inc		ecx
@@ -602,23 +602,23 @@ SkipCmnt:
 		.if word ptr [edi+ecx+sizeof CHARS]=="/'"
 			add		ecx,2
 		.endif
-		call	SkipSpc
+		call	NestedProc_SkipSpc
 		pop		eax
 	.endif
 	retn
 
-SkipSpc:
+NestedProc_SkipSpc:
 	.if ecx<[edi].CHARS.len
 		mov		al,[edi+ecx+sizeof CHARS]
 		.if al==VK_TAB || al==' ' || al==':' || (al=='*' && [ebx].EDIT.ccmntblocks!=1)
 			inc		ecx
-			jmp		SkipSpc
+			jmp		NestedProc_SkipSpc
 		.elseif al=='"'
-			call	SkipString
+			call	NestedProc_SkipString
 			.if byte ptr [edi+ecx+sizeof CHARS]=='"'
 				inc		ecx
 			.endif
-			jmp		SkipSpc
+			jmp		NestedProc_SkipSpc
 		.elseif al==byte ptr bracketcont
 			.if byte ptr [edi+ecx+sizeof CHARS+1]==VK_RETURN
 				inc		nLine
@@ -632,7 +632,7 @@ SkipSpc:
 						jmp		SkipSpcNf
 					.endif
 					xor		ecx,ecx
-					jmp		SkipSpc
+					jmp		NestedProc_SkipSpc
 				.else
 					jmp		SkipSpcNf
 				.endif
@@ -648,7 +648,7 @@ SkipSpcNf:
 	mov		esp,espsave
 	jmp		Nf
 
-OptSkipWord:
+NestedProc_OptSkipWord:
 	push	ecx
 	.while ecx<[edi].CHARS.len
 		mov		al,[esi]
@@ -675,7 +675,7 @@ OptSkipWord:
 	pop		ecx
 	retn
 
-SkipWord:
+NestedProc_SkipWord:
 	.if ecx<[edi].CHARS.len
 		movzx	eax,byte ptr [edi+ecx+sizeof CHARS]
 		.if eax!=VK_TAB && eax!=' ' && eax!=':'
@@ -683,7 +683,7 @@ SkipWord:
 			mov		al,[eax]
 			.if al==CT_CHAR || al==CT_HICHAR
 				inc		ecx
-				jmp		SkipWord
+				jmp		NestedProc_SkipWord
 			.else
 				.if al==CT_CMNTCHAR
 					mov		ecx,[edi].CHARS.len
@@ -709,7 +709,7 @@ SkipWord:
 		dec		eax
 		retn
 	.endif
-TestWord:
+NestedProc_TestWord:
 	mov		ax,[esi]
 	.if al==0
 		jmp		@f
@@ -717,8 +717,8 @@ TestWord:
 	.if al==' '
 		mov		ax,[edi+ecx+sizeof CHARS]
 		.if al==' ' || al==VK_TAB
-			call	SkipSpc
-			call	SkipCmnt
+			call	NestedProc_SkipSpc
+			call	NestedProc_SkipCmnt
 			dec		ecx
 			jmp		@b
 		.elseif al=='('
@@ -746,7 +746,7 @@ TestWord:
 		add		esi,3
 		.while ecx<[edi].CHARS.len
 			push	esi
-			call	TestWord
+			call	NestedProc_TestWord
 			.if !eax
 				pop		eax
 				xor		eax,eax
@@ -759,12 +759,12 @@ TestWord:
 		add		esi,3
 		.while ecx<[edi].CHARS.len
 			push	esi
-			call	SkipSpc
-			call	SkipCmnt
-			call	TestWord
+			call	NestedProc_SkipSpc
+			call	NestedProc_SkipCmnt
+			call	NestedProc_TestWord
 			.if !eax
-				call	SkipSpc
-				call	SkipCmnt
+				call	NestedProc_SkipSpc
+				call	NestedProc_SkipCmnt
 				pop		eax
 				mov		al,[edi+ecx+sizeof CHARS]
 				.if al==VK_RETURN || ecx==[edi].CHARS.len
@@ -804,8 +804,8 @@ TestWord:
 				retn
 			.endif
 		.endif
-		call	SkipSpc
-		call	SkipCmnt
+		call	NestedProc_SkipSpc
+		call	NestedProc_SkipCmnt
 		.if ecx==[edi].CHARS.len
 			xor		eax,eax
 			retn
@@ -815,7 +815,7 @@ TestWord:
 		mov		ax,[esi]
 		.while TRUE
 			push	ecx
-			call	TestWord
+			call	NestedProc_TestWord
 			pop		edx
 			inc		eax
 		  .if eax
@@ -823,12 +823,12 @@ TestWord:
 		  .endif
 			mov		esi,tmpesi
 			mov		ecx,edx
-			call	SkipWord
+			call	NestedProc_SkipWord
 			.if eax
 				inc		ecx
 			.endif
-			call	SkipSpc
-			call	SkipCmnt
+			call	NestedProc_SkipSpc
+			call	NestedProc_SkipCmnt
 			xor		eax,eax
 		  .if ecx>=[edi].CHARS.len
 		  	.break
@@ -836,12 +836,12 @@ TestWord:
 		.endw
 		retn
 	.elseif ax==' $'
-		call	SkipWord
-		call	SkipSpc
-		call	SkipCmnt
+		call	NestedProc_SkipWord
+		call	NestedProc_SkipSpc
+		call	NestedProc_SkipCmnt
 		inc		esi
 		inc		esi
-		jmp		TestWord
+		jmp		NestedProc_TestWord
 	.endif
 	mov		ah,[edi+ecx+sizeof CHARS]
 	.if al>='a' && al<='z'
@@ -1128,7 +1128,7 @@ HideLine proc uses ebx,hMem:DWORD,nLine:DWORD,fHide:DWORD
 				.if byte ptr [eax+ecx+sizeof CHARS-1]==0Dh
 					or		[eax].CHARS.state,STATE_HIDDEN
 					inc		[ebx].EDIT.nHidden
-					call	SetYP
+					call	NestedProc_SetYP
 					xor		eax,eax
 					inc		eax
 					jmp		Ex
@@ -1138,7 +1138,7 @@ HideLine proc uses ebx,hMem:DWORD,nLine:DWORD,fHide:DWORD
 			.if [eax].CHARS.state&STATE_HIDDEN
 				and		[eax].CHARS.state,-1 xor STATE_HIDDEN
 				dec		[ebx].EDIT.nHidden
-				call	SetYP
+				call	NestedProc_SetYP
 				xor		eax,eax
 				inc		eax
 				jmp		Ex
@@ -1149,7 +1149,7 @@ HideLine proc uses ebx,hMem:DWORD,nLine:DWORD,fHide:DWORD
   Ex:
 	ret
 
-SetYP:
+NestedProc_SetYP:
 	mov		edx,nLine
 	xor		eax,eax
 	.if edx<[ebx].EDIT.edta.topln
@@ -1691,7 +1691,7 @@ StreamIn proc uses ebx esi edi,hMem:DWORD,lParam:DWORD
   @@:
 	mov		esi,hCMem
 	add		esi,MAXSTREAM
-	call	ReadChars
+	call	NestedProc_ReadChars
 	.if eax!=0
 		jmp		@f
 	.endif
@@ -1736,7 +1736,7 @@ StreamIn proc uses ebx esi edi,hMem:DWORD,lParam:DWORD
 	mov		[ebx].EDIT.nHidden,0
 	ret
 
-ReadChars:
+NestedProc_ReadChars:
 	mov		edx,lParam
 	mov		[edx].EDITSTREAM.dwError,0
 	;	lea		eax,dwRead
@@ -1768,24 +1768,24 @@ StreamOut proc uses ebx esi edi,hMem:DWORD,lParam:DWORD
 		mov		eax,hCMem
 		mov		word ptr [eax],0FEFFh
 		mov		nChars,2
-		call	StreamAnsi
+		call	NestedProc_StreamAnsi
 	  @@:
-		call	FillCMem
+		call	NestedProc_FillCMem
 		.if ecx==0
 			jmp		Ex
 		.endif
-		call	StreamUnicode
+		call	NestedProc_StreamUnicode
 		.if eax==0
 			jmp		@b
 		.endif
 	.else
 		; Save as ansi
 	  @@:
-		call	FillCMem
+		call	NestedProc_FillCMem
 		.if ecx==0
 			jmp		Ex
 		.endif
-		call	StreamAnsi
+		call	NestedProc_StreamAnsi
 		.if eax==0
 			jmp		@b
 		.endif
@@ -1795,7 +1795,7 @@ StreamOut proc uses ebx esi edi,hMem:DWORD,lParam:DWORD
 	invoke GlobalFree,hCMem
 	ret
 
-StreamUnicode:
+NestedProc_StreamUnicode:
 	mov		eax,hCMem
 	add		eax,MAXSTREAM+1024
 	invoke MultiByteToWideChar,CP_ACP,0,hCMem,nChars,eax,MAXSTREAM+1024
@@ -1820,7 +1820,7 @@ StreamUnicode:
 	invoke EDITSTREAMCALLBACKPTR ptr [edx].EDITSTREAM.pfnCallback,[edx].EDITSTREAM.dwCookie,edx,ecx,eax
 	retn
 
-StreamAnsi:
+NestedProc_StreamAnsi:
 	mov		edx,lParam
 	mov		[edx].EDITSTREAM.dwError,0
 	;	lea		eax,dwWrite
@@ -1834,7 +1834,7 @@ StreamAnsi:
 	invoke EDITSTREAMCALLBACKPTR ptr [edx].EDITSTREAM.pfnCallback,[edx].EDITSTREAM.dwCookie,hCMem,nChars,eax
 	retn
 
-FillCMem:
+NestedProc_FillCMem:
 	xor		ecx,ecx
 	xor		edx,edx
 	mov		nChars,ecx
@@ -1860,9 +1860,9 @@ FillCMem:
 			.if nChars>=MAXSTREAM
 				pushad
 				.if [ebx].EDIT.funicode
-					call	StreamUnicode
+					call	NestedProc_StreamUnicode
 				.else
-					call	StreamAnsi
+					call	NestedProc_StreamAnsi
 				.endif
 				popad
 				mov		edi,hCMem

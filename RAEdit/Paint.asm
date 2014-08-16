@@ -154,13 +154,13 @@ DrawLine proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,nLine:DWORD,cp:DWORD,hDC
 				mov		nCmnt,1
 			.endif
 			and		edx,3
-			call	DrawSelBck
+			call	NestedProc_DrawSelBck
 			mov		eax,[ebx].EDIT.fstyle
 			.if eax&STYLE_NOHILITE
 				mov		fEnd,99
 			.endif
 			.if fCmnt
-				call	DrawCmntBack
+				call	NestedProc_DrawCmntBack
 			.endif
 			mov		ecx,edi
 			xor		edi,edi
@@ -210,7 +210,7 @@ DrawLine proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,nLine:DWORD,cp:DWORD,hDC
 					.endif
 				.elseif fCmnt
 					mov		eax,[ebx].EDIT.clr.cmntback
-					call	SetBack
+					call	NestedProc_SetBack
 					mov		eax,[ebx].EDIT.clr.cmntcol
 				.elseif fWrd
 					mov		eax,wCol
@@ -220,7 +220,7 @@ DrawLine proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,nLine:DWORD,cp:DWORD,hDC
 						movzx	eax,byte ptr [esi+edi-1]
 						.if nStringMode==2 && eax=='\'
 							mov		eax,[ebx].EDIT.clr.strback
-							call	SetBack
+							call	NestedProc_SetBack
 							mov		eax,[ebx].EDIT.clr.strcol
 							mov		wCol,eax
 						.else
@@ -230,12 +230,12 @@ DrawLine proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,nLine:DWORD,cp:DWORD,hDC
 							and		eax,3
 							mov		nStringMode,eax
 							mov		eax,[ebx].EDIT.clr.oprback
-							call	SetBack
+							call	NestedProc_SetBack
 							mov		eax,[ebx].EDIT.clr.oprcol
 						.endif
 					.else
 						mov		eax,[ebx].EDIT.clr.strback
-						call	SetBack
+						call	NestedProc_SetBack
 						mov		eax,[ebx].EDIT.clr.strcol
 						mov		wCol,eax
 					.endif
@@ -244,33 +244,33 @@ DrawLine proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,nLine:DWORD,cp:DWORD,hDC
 					movzx	edx,word ptr [esi+edi]
 					mov		al,byte ptr [eax+offset CharTab]
 					.if al==CT_CHAR || edx=='h&' || edx=='H&'
-						call	ScanWord
+						call	NestedProc_ScanWord
 						.if fNum
 							push	eax
 							mov		eax,[ebx].EDIT.clr.numback
-							call	SetBack
+							call	NestedProc_SetBack
 							pop		eax
 						.endif
 						.if fEnd==2
-							call	DrawCmntBack
+							call	NestedProc_DrawCmntBack
 						.endif
 					.elseif al==CT_HICHAR
-						call	ScanWord
+						call	NestedProc_ScanWord
 						.if eax==[ebx].EDIT.clr.txtcol
 							mov		fWrd,1
 							mov		eax,[ebx].EDIT.clr.oprcol
 						.endif
 					.elseif al==CT_OPER
 						mov		eax,[ebx].EDIT.clr.oprback
-						call	SetBack
+						call	NestedProc_SetBack
 						mov		eax,[ebx].EDIT.clr.oprcol
 						mov		fOpr,1
 					.elseif al==CT_CMNTCHAR
 						mov		fCmnt,eax
 						mov		eax,[ebx].EDIT.clr.cmntback
-						call	SetBack
+						call	NestedProc_SetBack
 						mov		eax,[ebx].EDIT.clr.cmntcol
-						call	DrawCmntBack
+						call	NestedProc_DrawCmntBack
 					.elseif al==CT_STRING
 						.if edi && nStringMode==1
 							movzx	eax,byte ptr [esi+edi-1]
@@ -282,7 +282,7 @@ DrawLine proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,nLine:DWORD,cp:DWORD,hDC
 						mov		fStr,eax
 						mov		fOpr,1
 						mov		eax,[ebx].EDIT.clr.oprback
-						call	SetBack
+						call	NestedProc_SetBack
 						mov		eax,[ebx].EDIT.clr.oprcol
 					.elseif al==CT_CMNTDBLCHAR
 						movzx	eax,word ptr [esi+edi]
@@ -292,9 +292,9 @@ DrawLine proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,nLine:DWORD,cp:DWORD,hDC
 							.endif
 							mov		fCmnt,eax
 							mov		eax,[ebx].EDIT.clr.cmntback
-							call	SetBack
+							call	NestedProc_SetBack
 							mov		eax,[ebx].EDIT.clr.cmntcol
-							call	DrawCmntBack
+							call	NestedProc_DrawCmntBack
 						.else
 							mov		eax,[ebx].EDIT.clr.oprcol
 						.endif
@@ -304,9 +304,9 @@ DrawLine proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,nLine:DWORD,cp:DWORD,hDC
 							inc		nCmnt
 							mov		fCmnt,eax
 							mov		eax,[ebx].EDIT.clr.cmntback
-							call	SetBack
+							call	NestedProc_SetBack
 							mov		eax,[ebx].EDIT.clr.cmntcol
-							call	DrawCmntBack
+							call	NestedProc_DrawCmntBack
 						.else
 							mov		eax,[ebx].EDIT.clr.oprcol
 						.endif
@@ -326,10 +326,10 @@ DrawLine proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,nLine:DWORD,cp:DWORD,hDC
 				.if fStr && !fOpr
 					push	eax
 					mov		eax,[ebx].EDIT.clr.strback
-					call	SetBack
+					call	NestedProc_SetBack
 					pop		eax
 				.endif
-				call	DrawWord
+				call	NestedProc_DrawWord
 				.if fEnd==1 && !fWrd
 					mov		fStr,1
 				.elseif fEnd==2 && !fWrd
@@ -354,7 +354,7 @@ DrawLine proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,nLine:DWORD,cp:DWORD,hDC
 	.endif
 	ret
 
-SetBack:
+NestedProc_SetBack:
 	.if eax!=[ebx].EDIT.clr.bckcol
 		mov		bCol,eax
 		invoke SetBkColor,hDC,eax
@@ -364,7 +364,7 @@ SetBack:
 	.endif
 	retn
 
-DrawWord:
+NestedProc_DrawWord:
 	push	eax
 	mov		eax,TRANSPARENT
 	.if fBack
@@ -382,7 +382,7 @@ DrawWord:
 		mul		ecx
 		add		eax,rcleft
 		.while byte ptr [esi+edi]==VK_TAB && edi<[esi-sizeof CHARS].CHARS.len
-			call	DrawTabMarker
+			call	NestedProc_DrawTabMarker
 			add		eax,ecx
 			inc		edi
 			mov		rect.right,eax
@@ -392,7 +392,7 @@ DrawWord:
 				push	edx
 				invoke CreateSolidBrush,bCol
 				push	eax
-				call	BackFill
+				call	NestedProc_BackFill
 				pop		eax
 				invoke DeleteObject,eax
 				pop		edx
@@ -414,7 +414,7 @@ DrawWord:
 		.while byte ptr [esi+edi]==VK_SPACE && edi<[esi-sizeof CHARS].CHARS.len
 			.if eax==edx
 				add		edx,[ebx].EDIT.fntinfo.tabwt
-				call	DrawTabMarker
+				call	NestedProc_DrawTabMarker
 			.endif
 			add		eax,ecx
 			inc		edi
@@ -425,7 +425,7 @@ DrawWord:
 				push	edx
 				invoke CreateSolidBrush,bCol
 				push	eax
-				call	BackFill
+				call	NestedProc_BackFill
 				pop		eax
 				invoke DeleteObject,eax
 				pop		edx
@@ -449,7 +449,7 @@ DrawWord:
 		mov		fChr,TRUE
 		.if !fWrd
 			push	eax
-			call	GetWord
+			call	NestedProc_GetWord
 			mov		fWrd,ecx
 			pop		eax
 		.endif
@@ -601,7 +601,7 @@ DrawWord:
 	.endif
 	retn
 
-DrawTabMarker:
+NestedProc_DrawTabMarker:
 	.if edi && !fChr
 		pushad
 		lea		esi,[eax+2]
@@ -623,15 +623,15 @@ DrawTabMarker:
 	.endif
 	retn
 
-ScanWord:
+NestedProc_ScanWord:
 	xor		ecx,ecx
 	mov		fNum,ecx
-	call	GetWord
+	call	NestedProc_GetWord
 	mov		fWrd,ecx
 	.if ecx
-		call	TestWord
+		call	NestedProc_TestWord
 		.if !ecx
-			call	GetNum
+			call	NestedProc_GetNum
 			.if !ecx
 				mov		eax,[ebx].EDIT.clr.txtcol
 			.else
@@ -646,7 +646,7 @@ ScanWord:
 	mov		wCol,eax
 	retn
 
-GetWord:
+NestedProc_GetWord:
 	xor		ecx,ecx
 	mov		edx,offset CharTab
 	.if word ptr [edi+esi]=='h&'
@@ -674,7 +674,7 @@ GetWord:
 	.endif
 	retn
 
-GetNum:
+NestedProc_GetNum:
 	push	ebx
 	xor		ebx,ebx
 	xor		ecx,ecx
@@ -717,7 +717,7 @@ GetNum:
 	pop		ebx
 	retn
 
-TestWord:
+NestedProc_TestWord:
 	push	ebx
 	movzx	eax,byte ptr [esi+edi]
 	mov		fLc,0
@@ -742,14 +742,14 @@ TestWord:
 		jmp		TestWord1
 	  @@:
 		mov		ah,byte ptr [ebx+edx].WORDINFO.fend
-		call	CmpWord
+		call	NestedProc_CmpWord
 		.if eax!=0
 			mov		edx,[ebx+edx].WORDINFO.rpprev
 			jmp		TestWord1
 		.endif
 		.if ah & 4
 			and		ah, not 4
-			call	SetCaseWord
+			call	NestedProc_SetCaseWord
 		.endif
 		mov		byte ptr fEnd,ah
 		mov		eax,[ebx+edx].WORDINFO.color
@@ -759,7 +759,7 @@ TestWord:
 	pop		ebx
 	retn
 
-CmpWord:
+NestedProc_CmpWord:
 	push	ecx
 	push	ebx
 	push	esi
@@ -803,7 +803,7 @@ CmpWord:
 	pop		ecx
 	retn
 
-SetCaseWord:
+NestedProc_SetCaseWord:
 	push	ecx
 	push	ebx
 	push	esi
@@ -821,7 +821,7 @@ SetCaseWord:
 	pop		ecx
 	retn
 
-BackFill:
+NestedProc_BackFill:
 	push	rect.left
 	push	rect.right
 	.if sdword ptr rect.left<0
@@ -835,7 +835,7 @@ BackFill:
 	pop		rect.left
 	retn
 
-DrawCmntBack:
+NestedProc_DrawCmntBack:
 	.if [ebx].EDIT.fstyle&STYLE_HILITECOMMENT
 		push	eax
 		push	rect.left
@@ -845,25 +845,25 @@ DrawCmntBack:
 		.if sdword ptr edx<=srect.left || sdword ptr eax>=srect.right
 			;Whole line
 			mov		eax,[ebx].EDIT.br.hBrHilite1
-			call 	BackFill
+			call 	NestedProc_BackFill
 		.elseif sdword ptr eax<srect.left
 			;Middle
 			mov		eax,srect.left
 			mov		rect.right,eax
 			mov		eax,[ebx].EDIT.br.hBrHilite1
-			call 	BackFill
+			call 	NestedProc_BackFill
 			mov		rect.right,2048
 			mov		eax,srect.right
 			mov		rect.left,eax
 			mov		eax,[ebx].EDIT.br.hBrHilite1
-			call 	BackFill
+			call 	NestedProc_BackFill
 		.elseif sdword ptr eax<srect.right
 			;Right
 			mov		eax,srect.right
 			mov		rect.left,eax
 			mov		rect.right,2048
 			mov		eax,[ebx].EDIT.br.hBrHilite1
-			call 	BackFill
+			call 	NestedProc_BackFill
 		.endif
 		pop		rect.right
 		pop		rect.left
@@ -871,7 +871,7 @@ DrawCmntBack:
 	.endif
 	retn
 
-DrawSelBck:
+NestedProc_DrawSelBck:
 	mov		srect.left,4096
 	mov		srect.right,4096
 	.if !([ebx].EDIT.nMode&MODE_BLOCK)
@@ -881,13 +881,13 @@ DrawSelBck:
 				;Whole line
 				invoke GetTextWidth,ebx,hDC,esi,edi,addr rect
 				mov		eax,[ebx].EDIT.br.hBrSelBck
-				call BackFill
+				call NestedProc_BackFill
 				invoke CopyRect,addr srect,addr rect
 			.elseif !cpMin
 				;Left part
 				invoke GetTextWidth,ebx,hDC,esi,cpMax,addr rect
 				mov		eax,[ebx].EDIT.br.hBrSelBck
-				call BackFill
+				call NestedProc_BackFill
 				invoke CopyRect,addr srect,addr rect
 			.elseif edi>cpMin
 				;Right or middle part
@@ -900,7 +900,7 @@ DrawSelBck:
 				invoke GetTextWidth,ebx,hDC,esi,ecx,addr rect
 				pop		rect.left
 				mov		eax,[ebx].EDIT.br.hBrSelBck
-				call BackFill
+				call NestedProc_BackFill
 				invoke CopyRect,addr srect,addr rect
 				mov		eax,rcleft
 				mov		rect.left,eax
@@ -936,7 +936,7 @@ DrawSelBck:
 			add		eax,[ebx].EDIT.fntinfo.fntht
 			mov		rect.bottom,eax
 			mov		eax,[ebx].EDIT.br.hBrSelBck
-			call BackFill
+			call NestedProc_BackFill
 			invoke CopyRect,addr srect,addr rect
 			mov		eax,rcleft
 			mov		rect.left,eax
@@ -982,7 +982,7 @@ SetBlockMarkers proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,nMax:DWORD
 		;Find root block
 		mov		esi,-1
 	  Nxt:
-		call	BlockRoot
+		call	NestedProc_BlockRoot
 		.if nLnEn
 			mov		esi,nLnSt
 			inc		esi
@@ -1042,7 +1042,7 @@ SetBlockMarkers proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,nMax:DWORD
 	.endif
 	ret
 
-BlockRoot:
+NestedProc_BlockRoot:
 	mov		nLnSt,0
 	mov		nLnEn,0
 	invoke NextBookMark,ebx,esi,1
@@ -1067,7 +1067,7 @@ BlockRoot:
 				.if [edx].RABLOCKDEF.flag&BD_SEGMENTBLOCK
 					dec		esi
 				.endif
-				jmp		BlockRoot
+				jmp		NestedProc_BlockRoot
 			.endif
 		.endif
 	.endif
@@ -1305,7 +1305,7 @@ RAEditPaint proc uses ebx esi edi,hWin:HWND
 				add		eax,[ebx].EDIT.linenrwt
 				.if ps.rcPaint.left<eax
 					invoke SelectClipRgn,mDC,NULL
-					call	DrawBlockMarker
+					call	NestedProc_DrawBlockMarker
 					.if [edi].CHARS.state&STATE_BREAKPOINT
 						mov		eax,[ebx].EDIT.selbarwt
 						add		eax,[ebx].EDIT.linenrwt
@@ -1358,7 +1358,7 @@ RAEditPaint proc uses ebx esi edi,hWin:HWND
 						add		edx,rect1.top
 						invoke ImageList_Draw,hIml,ecx,mDC,eax,edx,ILD_NORMAL
 					.endif
-					call	DrawPageBreak
+					call	NestedProc_DrawPageBreak
 					.if [ebx].EDIT.linenrwt
 						invoke SetBkMode,mDC,TRANSPARENT
 						invoke SetTextColor,mDC,[ebx].EDIT.clr.lnrcol
@@ -1420,7 +1420,7 @@ RAEditPaint proc uses ebx esi edi,hWin:HWND
 	.endif
 	ret
 
-DrawBlockMarker:
+NestedProc_DrawBlockMarker:
 	invoke DrawChangedState,ebx,mDC,edi,ps.rcPaint.left,rect1.top
 	.if [edi].CHARS.state&STATE_BLOCK
 		xor		eax,eax
@@ -1458,7 +1458,7 @@ DrawBlockMarker:
 	.endif
 	retn
 
-DrawPageBreak:
+NestedProc_DrawPageBreak:
 	mov		ecx,[ebx].EDIT.nPageBreak
 	.if ecx
 		mov		eax,esi
@@ -1651,7 +1651,7 @@ RAEditPaintNoBuff proc uses ebx esi edi,hWin:HWND
 				add		eax,[ebx].EDIT.linenrwt
 				.if ps.rcPaint.left<eax
 					invoke SelectClipRgn,ps.hdc,NULL
-					call	DrawBlockMarker
+					call	NestedProc_DrawBlockMarker
 					.if [edi].CHARS.state&STATE_BREAKPOINT
 						mov		eax,[ebx].EDIT.selbarwt
 						add		eax,[ebx].EDIT.linenrwt
@@ -1701,7 +1701,7 @@ RAEditPaintNoBuff proc uses ebx esi edi,hWin:HWND
 						add		edx,rect1.top
 						invoke ImageList_Draw,hIml,ecx,ps.hdc,eax,edx,ILD_NORMAL
 					.endif
-					call	DrawPageBreak
+					call	NestedProc_DrawPageBreak
 					.if [ebx].EDIT.linenrwt
 						invoke SetBkMode,ps.hdc,TRANSPARENT
 						invoke SetTextColor,ps.hdc,[ebx].EDIT.clr.lnrcol
@@ -1750,7 +1750,7 @@ RAEditPaintNoBuff proc uses ebx esi edi,hWin:HWND
 	.endif
 	ret
 
-DrawBlockMarker:
+NestedProc_DrawBlockMarker:
 	invoke DrawChangedState,ebx,ps.hdc,edi,0,rect1.top
 	.if [edi].CHARS.state&STATE_BLOCK
 		mov		eax,[ebx].EDIT.linenrwt
@@ -1782,7 +1782,7 @@ DrawBlockMarker:
 	.endif
 	retn
 
-DrawPageBreak:
+NestedProc_DrawPageBreak:
 	mov		ecx,[ebx].EDIT.nPageBreak
 	.if ecx
 		mov		eax,esi
