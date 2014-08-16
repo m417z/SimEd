@@ -95,14 +95,16 @@ DrawLine proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,nLine:DWORD,cp:DWORD,hDC
 				mov		eax,[ebx].EDIT.cpMin
 				mov		ecx,[ebx].EDIT.cpMax
 				.if ![ebx].EDIT.fHideSel && eax!=ecx
-					sub		eax,cp
-					jnb		@f
-					xor		eax,eax
-				  @@:
-					sub		ecx,cp
-					jnb		@f
-					xor		ecx,ecx
-				  @@:
+					.if eax>cp
+						sub		eax,cp
+					.else
+						xor		eax,eax
+					.endif
+					.if ecx>cp
+						sub		ecx,cp
+					.else
+						xor		ecx,ecx
+					.endif
 				.else
 					xor		eax,eax
 					xor		ecx,ecx
@@ -344,8 +346,9 @@ DrawLine proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,nLine:DWORD,cp:DWORD,hDC
 				mov		edx,[edx].RECT.right
 				mov		rect.right,edx
 				pop		ecx
-				cmp		eax,edx
-				jg		@f
+				.if sdword ptr eax>edx
+					jmp		@f
+				.endif
 			.endw
 		  @@:
 			mov		eax,lpCR
@@ -651,25 +654,29 @@ ScanWord:
 GetWord:
 	xor		ecx,ecx
 	mov		edx,offset CharTab
-	cmp		word ptr [edi+esi],'h&'
-	je		@f
-	cmp		word ptr [edi+esi],'H&'
-	je		@f
+	.if word ptr [edi+esi]=='h&'
+		jmp		@f
+	.endif
+	.if word ptr [edi+esi]=='H&'
+		jmp		@f
+	.endif
 ;	.if word ptr [edi+esi]=='>-'
 ;		inc		ecx
 ;		jmp		@f
 ;	.endif
 	lea		eax,[edi+esi]
 	movzx	eax,byte ptr [eax+ecx]
-	cmp		byte ptr [eax+edx],3
-	je		@f
+	.if byte ptr [eax+edx]==3
+		jmp		@f
+	.endif
 	dec		ecx
   @@:
 	inc		ecx
 	lea		eax,[edi+esi]
 	movzx	eax,byte ptr [eax+ecx]
-	cmp		byte ptr [eax+edx],1
-	je		@b
+	.if byte ptr [eax+edx]==1
+		jmp		@b
+	.endif
 	retn
 
 GetNum:
@@ -729,10 +736,12 @@ TestWord:
 	.if edx
 		mov		eax,[ebx+edx].WORDINFO.color
 		shr		eax,28
-		cmp		eax,nGroup
-		jne		TestWord2
-		cmp		ecx,[ebx+edx].WORDINFO.len
-		je		@f
+		.if eax!=nGroup
+			jmp		TestWord2
+		.endif
+		.if ecx==[ebx+edx].WORDINFO.len
+			jmp		@f
+		.endif
 	  TestWord2:
 		mov		edx,[ebx+edx].WORDINFO.rpprev
 		jmp		TestWord1
@@ -782,14 +791,17 @@ CmpWord:
 	.endif
 	mov		tmp, al
 	mov		al,[ebx+ecx-1]
-	.IF al>='a' && al <='z' && ah!=3
+	.if al>='a' && al <='z' && ah!=3
 		and		al,5Fh
-	.ENDIF
-	cmp		al, tmp
-	jne		CmpWord2
+	.endif
+	.if al!=tmp
+		jmp		CmpWord2
+	.endif
   CmpWord1:
 	dec		ecx
-	jne		@b
+	.if ecx!=0
+		jmp		@b
+	.endif
   CmpWord2:
 	pop		esi
 	pop		ebx
@@ -806,7 +818,9 @@ SetCaseWord:
 	mov		al,[ebx+ecx-1]
 	mov		[esi+ecx-1],al
 	dec		ecx
-	jnz		@b
+	.if ecx!=0
+		jmp		@b
+	.endif
 	pop		esi
 	pop		ebx
 	pop		ecx
@@ -1213,9 +1227,10 @@ RAEditPaint proc uses ebx esi edi,hWin:HWND
 	invoke SetBkMode,mDC,TRANSPARENT
 	mov		eax,[ebx].EDIT.selbarwt
 	add		eax,[ebx].EDIT.linenrwt
-	sub		eax,ps.rcPaint.left
-	jb		@f
-	mov		rect1.left,eax
+	.if eax>ps.rcPaint.left
+		sub		eax,ps.rcPaint.left
+		mov		rect1.left,eax
+	.endif
   @@:
 	invoke FillRect,mDC,addr rect1,[ebx].EDIT.br.hBrBck
 	invoke CopyRect,addr rcRgn1,addr rect1
@@ -1276,8 +1291,9 @@ RAEditPaint proc uses ebx esi edi,hWin:HWND
 	  @@:
 		mov		edi,esi
 		shl		edi,2
-		cmp		edi,[ebx].EDIT.rpLineFree
-		jnb		@f
+		.if edi>=[ebx].EDIT.rpLineFree
+			jmp		@f
+		.endif
 		inc		esi
 		add		edi,[ebx].EDIT.hLine
 		mov		edi,[edi].LINE.rpChars
@@ -1388,8 +1404,9 @@ RAEditPaint proc uses ebx esi edi,hWin:HWND
 		.endif
 		mov		eax,[edi].CHARS.len
 		add		cp,eax
-		or		edx,edx
-		je		@b
+		.if edx==0
+			jmp		@b
+		.endif
 		add		rect.top,edx
 		mov		edx,rect.top
 	.endw
@@ -1621,8 +1638,9 @@ RAEditPaintNoBuff proc uses ebx esi edi,hWin:HWND
 		mov		edx,[ebx].EDIT.fntinfo.fntht
 		mov		edi,esi
 		shl		edi,2
-		cmp		edi,[ebx].EDIT.rpLineFree
-		jnb		@f
+		.if edi>=[ebx].EDIT.rpLineFree
+			jmp		@f
+		.endif
 		inc		esi
 		add		edi,[ebx].EDIT.hLine
 		mov		edi,[edi].LINE.rpChars
@@ -1734,8 +1752,9 @@ RAEditPaintNoBuff proc uses ebx esi edi,hWin:HWND
 		.endif
 		mov		eax,[edi].CHARS.len
 		add		cp,eax
-		or		edx,edx
-		je		@b
+		.if edx==0
+			jmp		@b
+		.endif
 	  @@:
 		add		rect.top,edx
 		mov		edx,rect.top
