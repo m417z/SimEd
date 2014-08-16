@@ -38,10 +38,13 @@ GetTopFromYp proc uses ebx esi edi,hMem:DWORD,hWin:DWORD,yp:DWORD
 			.if edx<[ebx].EDIT.rpLineFree
 				inc		ecx
 				mov		edx,[esi+ecx*sizeof LINE].LINE.rpChars
-				test	[edi+edx].CHARS.state,STATE_HIDDEN
-				jne		Nxt1
+				.if [edi+edx].CHARS.state&STATE_HIDDEN
+					jmp		Nxt1
+				.endif
 				dec		eax
-				jne		Nxt1
+				.if eax!=0
+					jmp		Nxt1
+				.endif
 			.endif
 		.endif
 	.else
@@ -67,10 +70,13 @@ GetTopFromYp proc uses ebx esi edi,hMem:DWORD,hWin:DWORD,yp:DWORD
 			mov		eax,[edi+edx].CHARS.len
 			sub		cp,eax
 			pop		eax
-			test	[edi+edx].CHARS.state,STATE_HIDDEN
-			jne		Nxt2
+			.if [edi+edx].CHARS.state&STATE_HIDDEN
+				jmp		Nxt2
+			.endif
 			dec		eax
-			jne		Nxt2
+			.if eax!=0
+				jmp		Nxt2
+			.endif
 		.endif
 	.endif
   @@:
@@ -135,8 +141,9 @@ GetCharPtr proc uses ebx esi edi,hMem:DWORD,cp:DWORD
 	mov		edx,[esi].LINE.rpChars
 	add		ecx,[edi+edx].CHARS.len
 	add		esi,ebx
-	cmp		eax,ecx
-	jnc		@b
+	.if eax>=ecx
+		jmp		@b
+	.endif
 	sub		ecx,[edi+edx].CHARS.len
   @@:
 	mov		ebx,hMem
@@ -266,8 +273,9 @@ GetYpFromLine proc uses ebx esi edi,hMem:DWORD,nLine:DWORD
 		mov		ebx,edx
 		.while ecx<nLine
 			mov		edx,[esi+ecx*sizeof LINE].LINE.rpChars
-			test	[edi+edx].CHARS.state,STATE_HIDDEN
-			jne		@f
+			.if [edi+edx].CHARS.state&STATE_HIDDEN
+				jmp		@f
+			.endif
 			add		eax,ebx
 		  @@:
 			inc		ecx
@@ -280,8 +288,9 @@ GetYpFromLine proc uses ebx esi edi,hMem:DWORD,nLine:DWORD
 		.while ecx>nLine
 			dec		ecx
 			mov		edx,[esi+ecx*sizeof LINE].LINE.rpChars
-			test	[edi+edx].CHARS.state,STATE_HIDDEN
-			jne		@f
+			.if [edi+edx].CHARS.state&STATE_HIDDEN
+				jmp		@f
+			.endif
 			sub		eax,ebx
 		  @@:
 		.endw
@@ -315,8 +324,9 @@ GetLineFromYp proc uses ebx esi edi,hMem:DWORD,y:DWORD
 			inc		ecx
 			.break .if ecx>=maxln
 			mov		edx,[esi+ecx*sizeof LINE].LINE.rpChars
-			test	[edi+edx].CHARS.state,STATE_HIDDEN
-			jne		@f
+			.if [edi+edx].CHARS.state&STATE_HIDDEN
+				jmp		@f
+			.endif
 			add		eax,ebx
 		  @@:
 		.endw
@@ -328,8 +338,9 @@ GetLineFromYp proc uses ebx esi edi,hMem:DWORD,y:DWORD
 		.while eax>y
 			dec		ecx
 			mov		edx,[esi+ecx*sizeof LINE].LINE.rpChars
-			test	[edi+edx].CHARS.state,STATE_HIDDEN
-			jne		@f
+			.if [edi+edx].CHARS.state&STATE_HIDDEN
+				jmp		@f
+			.endif
 			sub		eax,ebx
 		  @@:
 		.endw
@@ -374,15 +385,17 @@ GetCpFromXp proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,x:DWORD,fNoAdjust:DWO
 	shr		edx,1
 	.if sdword ptr eax>x
 		sub		edi,edx
-		or		edx,edx
-		jne		@b
+		.if edx!=0
+			jmp		@b
+		.endif
 	.elseif sdword ptr eax<x
 		mov		eax,rect.right
 		mov		lastright,eax
 		mov		ecx,edi
 		add		edi,edx
-		or		edx,edx
-		jne		@b
+		.if edx!=0
+			jmp		@b
+		.endif
 	.endif
 	mov		edi,ecx
 	.if edi
@@ -493,7 +506,9 @@ GetCharFromPos proc uses ebx,hMem:DWORD,cpy:DWORD,x:DWORD,y:DWORD
 	add		edx,[ebx].EDIT.hChars
 	mov		eax,x
 	sub		eax,[ebx].EDIT.cpx
-	je		Ex
+	.if eax==0
+		jmp		Ex
+	.endif
 	mov		eax,[ebx].EDIT.nMode
 	and		eax,MODE_BLOCK
 	invoke GetCpFromXp,ebx,edx,x,eax
@@ -714,8 +729,9 @@ SetCaretVisible proc uses ebx esi edi,hWin:DWORD,cpy:DWORD
 			push	ecx
 			inc		fExpand
 		.endif
-		test	[edx].CHARS.state,STATE_HIDDEN
-		jne		@b
+		.if [edx].CHARS.state&STATE_HIDDEN
+			jmp		@b
+		.endif
 		mov		edi,fExpand
 		mov		fExpand,0
 		.while edi
@@ -760,17 +776,21 @@ SetCaretVisible proc uses ebx esi edi,hWin:DWORD,cpy:DWORD
 				mov		ecx,[ebx].EDIT.fntinfo.fntwt
 				shl		ecx,3
 				add		eax,ecx
-				sub		[ebx].EDIT.cpx,eax
-				jnb		@f
+				.if [ebx].EDIT.cpx>eax
+					sub		[ebx].EDIT.cpx,eax
+				.else
+					mov		[ebx].EDIT.cpx,0
+				.endif
 			.else
 				mov		ecx,[ebx].EDIT.fntinfo.fntwt
 				shl		ecx,3
 				sub		eax,ecx
-				add		[ebx].EDIT.cpx,eax
-				jb		@f
+				.if [ebx].EDIT.cpx<eax
+					add		[ebx].EDIT.cpx,eax
+				.else
+					mov		[ebx].EDIT.cpx,0
+				.endif
 			.endif
-			mov		[ebx].EDIT.cpx,0
-		  @@:
 		.elseif eax>edx
 			mov		ecx,[ebx].EDIT.fntinfo.fntwt
 			shl		ecx,3
