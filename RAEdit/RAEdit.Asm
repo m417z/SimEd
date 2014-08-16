@@ -2038,13 +2038,14 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 				.endif
 				add		eax,[esi].RAEDT.cpy
 				mov		ecx,[ebx].EDIT.fntinfo.fntht
-				xor		edx,edx
 				.if sdword ptr eax<0
 					neg		eax
+					xor		edx,edx
 					div		ecx
 					mul		ecx
 					neg		eax
 				.else
+					xor		edx,edx
 					div		ecx
 					mul		ecx
 				.endif
@@ -2805,8 +2806,8 @@ NestedProc_SetBlock:
 	sub		eax,[ebx].EDIT.linenrwt
 	sub		eax,[ebx].EDIT.selbarwt
 	add		eax,[ebx].EDIT.cpx
-	cdq
 	mov		ecx,[ebx].EDIT.fntinfo.fntwt
+	cdq
 	idiv	ecx
 	mov		[ebx].EDIT.blrg.clMin,eax
 	.if !fShift
@@ -2952,10 +2953,11 @@ ConvTwipsToPixels proc hDC:HDC,fHorz:DWORD,lSize:DWORD
 	.else
 		invoke GetDeviceCaps,hDC,LOGPIXELSY
 	.endif
-	mov		ecx,lSize
-	mul		ecx
-	mov		ecx,1440
-	div		ecx
+	;	mov		ecx,lSize
+	;	mul		ecx
+	;	mov		ecx,1440
+	;	div		ecx
+	invoke MulDiv,lSize,1440,eax
 	ret
 
 ConvTwipsToPixels endp
