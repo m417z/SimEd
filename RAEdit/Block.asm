@@ -32,8 +32,9 @@ GetBlock proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,lpBlockDef:DWORD
 		  @@:
 			inc		esi
 			mov		al,[esi]
-			cmp		al,' '
-			je		@b
+			.if al==' '
+				jmp		@b
+			.endif
 			invoke lstrcpy,edx,esi
 			lea		esi,buffer
 			call	TestBlock
@@ -47,8 +48,9 @@ GetBlock proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,lpBlockDef:DWORD
 		  @@:
 			inc		esi
 			mov		al,[esi]
-			cmp		al,' '
-			je		@b
+			.if al==' '
+				jmp		@b
+			.endif
 			invoke lstrcpy,edx,esi
 			push	esi
 			lea		esi,buffer
@@ -70,10 +72,12 @@ GetBlock proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,lpBlockDef:DWORD
 				lea		edx,buffer
 			  @@:
 				mov		al,[esi]
-				cmp		al,' '
-				je		@f
-				cmp		al,'$'
-				je		@f
+				.if al==' '
+					jmp		@f
+				.endif
+				.if al=='$'
+					jmp		@f
+				.endif
 				mov		[edx],al
 				inc		esi
 				inc		edx
@@ -148,12 +152,16 @@ TestBlock:
 		.endif
 		invoke IsLine,ebx,edi,esi
 		.if eax!=-1
-			cmp		dword ptr nNest,0
-			.break .if ZERO?
+			.if dword ptr nNest==0
+				.break
+			.endif
 			dec		nNest
-			.break .if ZERO?
-			cmp		dword ptr nNest,1
-			.break .if ZERO?
+			.if nNest==0
+				.break
+			.endif
+			.if dword ptr nNest==1
+				.break
+			.endif
 		.endif
 		inc		edi
 		inc		nLines
@@ -165,13 +173,15 @@ TestBlock:
 		dec		nLines
 	.endif
 	.if eax!=-1 && !nNest
-		test	flag,BD_INCLUDELAST
-		je		@f
+		.if !(flag&BD_INCLUDELAST)
+			jmp		@f
+		.endif
 		mov		ecx,edi
 		inc		ecx
 		shl		ecx,2
-		cmp		ecx,[ebx].EDIT.rpLineFree
-		je		@f
+		.if ecx==[ebx].EDIT.rpLineFree
+			jmp		@f
+		.endif
 		inc		nLines
 	  @@:
 		mov		eax,nLines
@@ -214,13 +224,16 @@ SkipWhSp:
 	dec		ecx
   @@:
 	inc		ecx
-	cmp		ecx,[edi].CHARS.len
-	jnc		@f
+	.if ecx>=[edi].CHARS.len
+		jmp		@f
+	.endif
 	mov		al,[edi+ecx+sizeof CHARS]
-	cmp		al,VK_TAB
-	je		@b
-	cmp		al,' '
-	je		@b
+	.if al==VK_TAB
+		jmp		@b
+	.endif
+	.if al==' '
+		jmp		@b
+	.endif
   @@:
 	retn
 
@@ -228,29 +241,37 @@ SkipWrd:
 	dec		ecx
   @@:
 	inc		ecx
-	cmp		ecx,[edi].CHARS.len
-	jnc		@f
+	.if ecx>=[edi].CHARS.len
+		jmp		@f
+	.endif
 	mov		al,[edi+ecx+sizeof CHARS]
-	cmp		al,VK_TAB
-	je		@f
-	cmp		al,' '
-	je		@f
-	cmp		al,0Dh
-	jne		@b
+	.if al==VK_TAB
+		jmp		@f
+	.endif
+	.if al==' '
+		jmp		@f
+	.endif
+	.if al!=0Dh
+		jmp		@b
+	.endif
   @@:
 	retn
 
 CopyWrd:
   @@:
-	cmp		ecx,[edi].CHARS.len
-	jnc		@f
+	.if ecx>=[edi].CHARS.len
+		jmp		@f
+	.endif
 	mov		al,[edi+ecx+sizeof CHARS]
-	cmp		al,VK_TAB
-	je		@f
-	cmp		al,' '
-	je		@f
-	cmp		al,0Dh
-	je		@f
+	.if al==VK_TAB
+		jmp		@f
+	.endif
+	.if al==' '
+		jmp		@f
+	.endif
+	.if al==0Dh
+		jmp		@f
+	.endif
 	mov		[edx],al
 	inc		ecx
 	inc		edx
@@ -288,15 +309,21 @@ SetBlocks proc uses ebx esi edi,hMem:DWORD,lpLnrg:DWORD,lpBlockDef:DWORD
 	.if edi<esi
 		invoke IsLine,ebx,nLine,offset szInclude
 		inc		eax
-		jne		@b
+		.if eax!=0
+			jmp		@b
+		.endif
 		invoke IsLine,ebx,nLine,offset szIncludelib
 		inc		eax
-		jne		@b
+		.if eax!=0
+			jmp		@b
+		.endif
 		mov		eax,lpBlockDef
 		mov		eax,[eax].RABLOCKDEF.lpszStart
 		invoke IsLine,ebx,nLine,eax
 		inc		eax
-		je		@b
+		.if eax==0
+			jmp		@b
+		.endif
 		add		edi,[ebx].EDIT.hLine
 		mov		edi,[edi].LINE.rpChars
 		add		edi,[ebx].EDIT.hChars
@@ -400,7 +427,9 @@ IsBlockDefEqual proc uses esi edi,lpRABLOCKDEF1:DWORD,lpRABLOCKDEF2:DWORD
 		mov		edx,[edi].RABLOCKDEF.lpszStart
 		.if eax && edx
 			invoke lstrcmp,eax,edx
-			jne		NotEq
+			.if eax!=0
+				jmp		NotEq
+			.endif
 		.elseif (eax && !edx) || (!eax && edx)
 			jmp		NotEq
 		.endif
@@ -408,7 +437,9 @@ IsBlockDefEqual proc uses esi edi,lpRABLOCKDEF1:DWORD,lpRABLOCKDEF2:DWORD
 		mov		edx,[edi].RABLOCKDEF.lpszEnd
 		.if eax && edx
 			invoke lstrcmp,eax,edx
-			jne		NotEq
+			.if eax!=0
+				jmp		NotEq
+			.endif
 		.elseif (eax && !edx) || (!eax && edx)
 			jmp		NotEq
 		.endif
@@ -416,7 +447,9 @@ IsBlockDefEqual proc uses esi edi,lpRABLOCKDEF1:DWORD,lpRABLOCKDEF2:DWORD
 		mov		edx,[edi].RABLOCKDEF.lpszNot1
 		.if eax && edx
 			invoke lstrcmp,eax,edx
-			jne		NotEq
+			.if eax!=0
+				jmp		NotEq
+			.endif
 		.elseif (eax && !edx) || (!eax && edx)
 			jmp		NotEq
 		.endif
@@ -424,7 +457,9 @@ IsBlockDefEqual proc uses esi edi,lpRABLOCKDEF1:DWORD,lpRABLOCKDEF2:DWORD
 		mov		edx,[edi].RABLOCKDEF.lpszNot2
 		.if eax && edx
 			invoke lstrcmp,eax,edx
-			jne		NotEq
+			.if eax!=0
+				jmp		NotEq
+			.endif
 		.elseif (eax && !edx) || (!eax && edx)
 			jmp		NotEq
 		.endif
@@ -453,7 +488,9 @@ IsInBlock proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,lpBlockDef:DWORD
 	.if eax
 		invoke IsLine,ebx,edi,esi
 		inc		eax
-		je		@b
+		.if eax==0
+			jmp		@b
+		.endif
 		invoke GetBlock,ebx,edi,lpBlockDef
 		add		edi,eax
 		mov		eax,lpBlockDef
@@ -926,15 +963,17 @@ Expand proc uses ebx esi edi,hMem:DWORD,nLine:DWORD
 		mov		[ebx].EDIT.edtb.topcp,eax
 	.endif
 	shl		esi,2
-	cmp		esi,[ebx].EDIT.rpLineFree
-	jnb		Ex
+	.if esi>=[ebx].EDIT.rpLineFree
+		jmp		Ex
+	.endif
 	add		esi,[ebx].EDIT.hLine
 	mov		ecx,[ebx].EDIT.rpLineFree
 	add		ecx,[ebx].EDIT.hLine
 	mov		eax,[esi].LINE.rpChars
 	add		eax,[ebx].EDIT.hChars
-	test	[eax].CHARS.state,STATE_HIDDEN
-	jne		Ex
+	.if [eax].CHARS.state&STATE_HIDDEN
+		jmp		Ex
+	.endif
 	mov		edi,[esi].LINE.rpChars
 	add		edi,[ebx].EDIT.hChars
 	mov		eax,[edi].CHARS.state
@@ -961,15 +1000,17 @@ Expand proc uses ebx esi edi,hMem:DWORD,nLine:DWORD
 		.while esi<ecx
 			mov		edi,[esi].LINE.rpChars
 			add		edi,[ebx].EDIT.hChars
-			test	[edi].CHARS.state,STATE_HIDDEN
-			.break .if !ZERO?
+			.if [edi].CHARS.state&STATE_HIDDEN
+				.break
+			.endif
 			add		esi,sizeof LINE
 		.endw
 		pop		ecx
 		mov		edi,[esi].LINE.rpChars
 		add		edi,[ebx].EDIT.hChars
-		test	[edi].CHARS.state,STATE_HIDDEN
-		je		Ex
+		.if !([edi].CHARS.state&STATE_HIDDEN)
+			jmp		Ex
+		.endif
 		mov		edx,[edi].CHARS.bmid
 		.while esi<ecx
 			mov		edi,[esi].LINE.rpChars
@@ -1225,16 +1266,19 @@ TestWrd:
   @@:
 	inc		edx
 	mov		al,[edx]
-	or		al,al
-	je		@f
+	.if al==0
+		jmp		@f
+	.endif
 TestWrd1:
 	inc		ecx
 	mov		ah,[esi+ecx+sizeof CHARS]
 	.if al=='+'
-		cmp		ah,' '
-		je		TestWrd1
-		cmp		ah,VK_TAB
-		je		TestWrd1
+		.if ah==' '
+			jmp		TestWrd1
+		.endif
+		.if ah==VK_TAB
+			jmp		TestWrd1
+		.endif
 		mov		byte ptr cmntchar,ah
 		jmp		@f
 	.elseif al=='-'
@@ -1246,8 +1290,9 @@ TestWrd1:
 	.if ah>='a' && ah<='z'
 		and		ah,5Fh
 	.endif
-	cmp		al,ah
-	je		@b
+	.if al==ah
+		jmp		@b
+	.endif
 	pop		edx
 	pop		ecx
 	retn
@@ -1263,17 +1308,21 @@ IsLineStart:
 	mov		eax,ecx
   @@:
 	inc		ecx
-	cmp		ecx,[esi].CHARS.len
-	je		@f
+	.if ecx==[esi].CHARS.len
+		jmp		@f
+	.endif
 	mov		al,[esi+ecx+sizeof CHARS]
-	cmp		al,' '
-	je		@b
-	cmp		al,VK_TAB
-	je		@b
+	.if al==' '
+		jmp		@b
+	.endif
+	.if al==VK_TAB
+		jmp		@b
+	.endif
 	movzx	eax,byte ptr [esi+ecx+sizeof CHARS]
 	movzx	eax,byte ptr [eax+offset CharTab]
-	cmp		eax,CT_CMNTCHAR
-	je		@f
+	.if eax==CT_CMNTCHAR
+		jmp		@f
+	.endif
 	.if [ebx].EDIT.ccmntblocks && [ebx].EDIT.ccmntblocks!=4
 		.while ecx<[esi].CHARS.len
 			call	TestWrd
