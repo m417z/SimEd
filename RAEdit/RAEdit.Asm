@@ -517,8 +517,7 @@ StateProc proc uses ebx,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		invoke BeginPaint,hWin,addr ps
 		invoke GetWindowLong,hWin,GWL_USERDATA
 		mov		ebx,eax
-		test	[ebx].EDIT.fstyle,STYLE_READONLY
-		.if !ZERO?
+		.if [ebx].EDIT.fstyle&STYLE_READONLY
 			invoke CreateSolidBrush,0FFh
 			mov		hBr,eax
 		.elseif [ebx].EDIT.fChanged
@@ -585,8 +584,7 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 			.if fControl
 				invoke SendMessage,hWin,WM_VSCROLL,SB_LINEUP,[esi].RAEDT.hvscroll
 			.else
-				test	[ebx].EDIT.nMode,MODE_BLOCK
-				.if ZERO?
+				.if !([ebx].EDIT.nMode&MODE_BLOCK)
 					mov		eax,[ebx].EDIT.cpMin
 					.if eax>[ebx].EDIT.cpMax && !fShift
 						xchg	eax,[ebx].EDIT.cpMax
@@ -681,8 +679,7 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 			.if fControl
 				invoke SendMessage,hWin,WM_VSCROLL,SB_LINEDOWN,[esi].RAEDT.hvscroll
 			.else
-				test	[ebx].EDIT.nMode,MODE_BLOCK
-				.if ZERO?
+				.if !([ebx].EDIT.nMode&MODE_BLOCK)
 					invoke GetCharPtr,ebx,[ebx].EDIT.cpMin
 					mov		nOldLine,edx
 					mov		eax,[ebx].EDIT.cpMin
@@ -773,8 +770,7 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 				invoke SetCaret,ebx,[esi].RAEDT.cpy
 			.endif
 		.else
-			test	[ebx].EDIT.nMode,MODE_BLOCK
-			.if ZERO?
+			.if !([ebx].EDIT.nMode&MODE_BLOCK)
 			  @@:
 				mov		eax,[ebx].EDIT.cpMin
 				.if eax>[ebx].EDIT.cpMax && !fShift
@@ -867,8 +863,7 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 				invoke SetCaret,ebx,[esi].RAEDT.cpy
 			.endif
 		.else
-			test	[ebx].EDIT.nMode,MODE_BLOCK
-			.if ZERO?
+			.if !([ebx].EDIT.nMode&MODE_BLOCK)
 			  @@:
 				mov		eax,[ebx].EDIT.cpMin
 				.if eax<[ebx].EDIT.cpMax && !fShift
@@ -968,8 +963,7 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 			.if fControl
 				invoke SendMessage,hWin,WM_VSCROLL,SB_PAGEUP,[esi].RAEDT.hvscroll
 			.else
-				test	[ebx].EDIT.nMode,MODE_BLOCK
-				.if ZERO?
+				.if !([ebx].EDIT.nMode&MODE_BLOCK)
 					mov		eax,[ebx].EDIT.cpMin
 					push	eax
 					.if eax>[ebx].EDIT.cpMax && !fShift
@@ -1062,8 +1056,7 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 			.if fControl
 				invoke SendMessage,hWin,WM_VSCROLL,SB_PAGEDOWN,[esi].RAEDT.hvscroll
 			.else
-				test	[ebx].EDIT.nMode,MODE_BLOCK
-				.if ZERO?
+				.if !([ebx].EDIT.nMode&MODE_BLOCK)
 					mov		eax,[ebx].EDIT.cpMin
 					push	eax
 					.if eax<[ebx].EDIT.cpMax && !fShift
@@ -1195,8 +1188,7 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 				.endif
 			.endif
 		.else
-			test	[ebx].EDIT.nMode,MODE_BLOCK
-			.if ZERO?
+			.if !([ebx].EDIT.nMode&MODE_BLOCK)
 				mov		[esi].RAEDT.cpxmax,0
 				mov		[ebx].EDIT.cpx,0
 				.if fControl
@@ -1253,8 +1245,7 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 				invoke SendMessage,[ebx].EDIT.hwnd,REM_SETSPLIT,eax,0
 			.endif
 		.else
-			test	[ebx].EDIT.nMode,MODE_BLOCK
-			.if ZERO?
+			.if !([ebx].EDIT.nMode&MODE_BLOCK)
 				mov		eax,[ebx].EDIT.cpMin
 				.if eax<[ebx].EDIT.cpMax && !fShift
 					xchg	eax,[ebx].EDIT.cpMax
@@ -1354,8 +1345,7 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 		.else
 			.if ((!fShift && !fControl) || (!fShift && fControl) || (fShift && fControl))
 				;Delete. Ctrl+Delete, delete to end of word. Ctrl+Shift+Delete, delete to end of line.
-				test	[ebx].EDIT.nMode,MODE_BLOCK
-				.if ZERO?
+				.if !([ebx].EDIT.nMode&MODE_BLOCK)
 					mov		eax,[ebx].EDIT.cpMin
 					.if fControl
 						.if eax>[ebx].EDIT.cpMax
@@ -1484,8 +1474,7 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 		.elseif fControl
 			;Ctrl+Backspace, Delete to start of word.
 			;Ctrl+Shift+Backspace, Delete to start of line.
-			test	[ebx].EDIT.nMode,MODE_BLOCK
-			.if ZERO?
+			.if !([ebx].EDIT.nMode&MODE_BLOCK)
 				mov		eax,[ebx].EDIT.cpMin
 				.if eax>[ebx].EDIT.cpMax
 					xchg	[ebx].EDIT.cpMax,eax
@@ -1568,8 +1557,7 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 				mov		fSize,FALSE
 				invoke RAEditPaint,hWin
 			.else
-				test	[ebx].EDIT.fstyle,STYLE_NOBACKBUFFER
-				.if ZERO?
+				.if !([ebx].EDIT.fstyle&STYLE_NOBACKBUFFER)
 					invoke RAEditPaint,hWin
 				.else
 					invoke GetUpdateRect,hWin,addr rect,FALSE
@@ -1661,8 +1649,7 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 			inc		nUndoid
 		.elseif edx==41h && fControl && !fShift && !fAlt
 			;Ctrl+A, Select all
-			test	[ebx].EDIT.nMode,MODE_BLOCK
-			.if ZERO?
+			.if !([ebx].EDIT.nMode&MODE_BLOCK)
 				invoke GetCharPtr,ebx,-1
 				mov		[ebx].EDIT.cpMax,ecx
 				invoke GetCharPtr,ebx,0
@@ -1699,8 +1686,7 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 			invoke InvalidateEdit,ebx,[ebx].EDIT.edta.hwnd
 			invoke InvalidateEdit,ebx,[ebx].EDIT.edtb.hwnd
 		.endif
-		test	[ebx].EDIT.nMode,MODE_BLOCK
-		.if ZERO?
+		.if !([ebx].EDIT.nMode&MODE_BLOCK)
 			mov		eax,wParam
 			.if (eax>=VK_SPACE || eax==VK_RETURN || eax==VK_TAB) && eax!=7Fh
 				invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
@@ -1978,8 +1964,7 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 			.if fSelState==1
 				mov		fSelState,2
 			.endif
-			test	wParam,MK_LBUTTON
-			.if !ZERO?
+			.if wParam&MK_LBUTTON
 				.if !tmr1.hwnd
 					mov		eax,pt.x
 					mov		edx,pt.y
@@ -2228,8 +2213,7 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 						invoke InvalidateSelection,ebx,[ebx].EDIT.edtb.hwnd,cpOldMax,[ebx].EDIT.cpMax
 					.endif
 					invoke SelChange,ebx,SEL_TEXT
-					test	wParam,MK_LBUTTON
-					.if !ZERO?
+					.if wParam&MK_LBUTTON
 						mov		eax,pt.y
 						.if eax>[esi].RAEDT.rc.bottom
 							.if !tmr1.hwnd
@@ -2281,8 +2265,7 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 					mov		edi,[ebx].EDIT.rpChars
 					add		edi,[ebx].EDIT.hChars
 					mov		ecx,[edi].CHARS.len
-					test	[edi].CHARS.state,STATE_BMMASK
-					.if !ZERO?
+					.if [edi].CHARS.state&STATE_BMMASK
 						invoke GetPosFromChar,ebx,cp,addr pt
 						mov		edx,pt.y
 						sub		edx,[esi].RAEDT.cpy
@@ -2358,8 +2341,7 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 				invoke GetTopFromYp,ebx,hWin,[esi].RAEDT.cpy
 				invoke SetCapture,hWin
 				.if !fOnBM
-					test	[ebx].EDIT.nMode,MODE_BLOCK
-					.if ZERO?
+					.if !([ebx].EDIT.nMode&MODE_BLOCK)
 						.if [ebx].EDIT.cpx
 							mov		[ebx].EDIT.cpx,0
 							invoke InvalidateEdit,ebx,[ebx].EDIT.edta.hwnd
@@ -2432,8 +2414,7 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 				.endif
 			.else
 				mov		[ebx].EDIT.cpselbar,-1
-				test	[ebx].EDIT.nMode,MODE_BLOCK
-				.if ZERO?
+				.if !([ebx].EDIT.nMode&MODE_BLOCK)
 					.if fSel
 						invoke InvalidateSelection,ebx,[ebx].EDIT.edta.hwnd,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
 						invoke InvalidateSelection,ebx,[ebx].EDIT.edtb.hwnd,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
@@ -2692,8 +2673,7 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		.if edx!=0
 			invoke ScrollEdit,ebx,hWin,0,edx
 		.endif
-		test	[ebx].EDIT.fstyle,STYLE_SCROLLTIP
-		.if !ZERO?
+		.if [ebx].EDIT.fstyle&STYLE_SCROLLTIP
 			mov		eax,wParam
 			movzx	eax,ax
 			.if eax==SB_THUMBTRACK
@@ -2734,8 +2714,7 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		invoke DefWindowProc,hWin,uMsg,wParam,lParam
 		mov		eax,hWin
 		mov		[ebx].EDIT.focus,eax
-		test	[ebx].EDIT.nMode,MODE_BLOCK
-		.if ZERO?
+		.if !([ebx].EDIT.nMode&MODE_BLOCK)
 			mov		eax,2
 		.else
 			mov		eax,3
@@ -2776,8 +2755,7 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 				mov		ecx,[ebx].EDIT.edtb.rc.bottom
 				xor		edx,edx
 				.if ![ebx].EDIT.nsplitt
-					test	[ebx].EDIT.fstyle,STYLE_NOSPLITT
-					.if ZERO?
+					.if !([ebx].EDIT.fstyle&STYLE_NOSPLITT)
 						mov		edx,BTNHT
 						sub		ecx,edx
 					.endif
@@ -3065,8 +3043,7 @@ RAWndProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 			invoke InvalidateEdit,ebx,[ebx].EDIT.edtb.hwnd
 			.if ![ebx].EDIT.fntinfo.monospace
 				mov		eax,[ebx].EDIT.nMode
-				test	eax,MODE_BLOCK
-				.if !ZERO?
+				.if eax&MODE_BLOCK
 					xor		eax,MODE_BLOCK
 					invoke SendMessage,hWin,REM_SETMODE,eax,0
 				.endif
@@ -3908,8 +3885,7 @@ RAWndProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 			;wParam=nMode
 			;lParam=0
 			mov		eax,wParam
-			test	eax,MODE_OVERWRITE
-			.if ZERO?
+			.if !(eax&MODE_OVERWRITE)
 				mov		[ebx].EDIT.fOvr,FALSE
 			.else
 				mov		[ebx].EDIT.fOvr,TRUE
@@ -3920,13 +3896,11 @@ RAWndProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 			mov		edx,[ebx].EDIT.nMode
 			mov		[ebx].EDIT.nMode,eax
 			xor		eax,edx
-			test	eax,MODE_BLOCK
-			.if !ZERO?
+			.if eax&MODE_BLOCK
 				.if ![ebx].EDIT.fntinfo.monospace
 					and		[ebx].EDIT.nMode,-1 xor MODE_BLOCK
 				.endif
-				test	[ebx].EDIT.nMode,MODE_BLOCK
-				.if ZERO?
+				.if !([ebx].EDIT.nMode&MODE_BLOCK)
 					mov		eax,2
 				.else
 					mov		eax,3
@@ -3937,8 +3911,7 @@ RAWndProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 				invoke GetCharFromPos,ebx,[esi].RAEDT.cpy,pt.x,pt.y
 				mov		[ebx].EDIT.cpMin,eax
 				mov		[ebx].EDIT.cpMax,eax
-				test	[ebx].EDIT.nMode,MODE_BLOCK
-				.if ZERO?
+				.if !([ebx].EDIT.nMode&MODE_BLOCK)
 					xor		eax,eax
 					mov		[ebx].EDIT.blrg.lnMin,eax
 					mov		[ebx].EDIT.blrg.clMin,eax
@@ -3974,8 +3947,7 @@ RAWndProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		_REM_SETBLOCK:
 			;wParam=0
 			;lParam=lpBLOCKRANGE
-			test	[ebx].EDIT.nMode,MODE_BLOCK
-			.if !ZERO?
+			.if [ebx].EDIT.nMode&MODE_BLOCK
 				invoke GetBlockRects,ebx,addr oldrects
 				mov		edx,lParam
 				mov		eax,[edx].BLOCKRANGE.lnMin
@@ -3998,8 +3970,7 @@ RAWndProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 			ret
 		align 4
 		_REM_BLOCKINSERT:
-			test	[ebx].EDIT.nMode,MODE_BLOCK
-			.if !ZERO?
+			.if [ebx].EDIT.nMode&MODE_BLOCK
 				invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
 				.if eax!=0
 					jmp		ErrBeep
@@ -4069,8 +4040,7 @@ RAWndProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 			ret
 		align 4
 		_REM_CONVERT:
-			test	[ebx].EDIT.nMode,MODE_BLOCK
-			.if ZERO?
+			.if !([ebx].EDIT.nMode&MODE_BLOCK)
 				invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
 				.if eax!=0
 					jmp		ErrBeep
@@ -4137,16 +4107,13 @@ RAWndProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 				mov		fAlt,0
 				mov		fControl,0
 				mov		fShift,0
-				test	ecx,CMD_ALT
-				.if !ZERO?
+				.if ecx&CMD_ALT
 					mov		fAlt,TRUE
 				.endif
-				test	ecx,CMD_CTRL
-				.if !ZERO?
+				.if ecx&CMD_CTRL
 					mov		fControl,TRUE
 				.endif
-				test	ecx,CMD_SHIFT
-				.if !ZERO?
+				.if ecx&CMD_SHIFT
 					mov		fShift,TRUE
 				.endif
 				movzx	ecx,cl
@@ -4501,8 +4468,7 @@ align 4
 		_EM_EXSETSEL:
 			;wParam=0
 			;lParam=lpCHARRANGE
-			test	[ebx].EDIT.nMode,MODE_BLOCK
-			.if ZERO?
+			.if !([ebx].EDIT.nMode&MODE_BLOCK)
 				.if ![ebx].EDIT.fHideSel
 					mov		eax,[ebx].EDIT.cpMin
 					.if eax!=[ebx].EDIT.cpMax
@@ -4551,8 +4517,7 @@ align 4
 		_EM_FINDTEXTEX:
 			;wParam=Flags
 			;lParam=lpFINDTEXTEX
-			test	[ebx].EDIT.nMode,MODE_BLOCK
-			.if ZERO?
+			.if !([ebx].EDIT.nMode&MODE_BLOCK)
 				invoke FindTextEx,ebx,wParam,lParam
 			.else
 				xor		eax,eax
@@ -4584,8 +4549,7 @@ align 4
 			;wParam=0
 			;lParam=0
 			xor		eax,eax
-			test	[ebx].EDIT.nMode,MODE_BLOCK
-			.if ZERO?
+			.if !([ebx].EDIT.nMode&MODE_BLOCK)
 				mov		edx,[ebx].EDIT.hUndo
 				add		edx,[ebx].EDIT.rpUndo
 				mov		eax,[edx].RAUNDO.cb
@@ -4941,8 +4905,7 @@ align 4
 		_EM_SETSEL:
 			;wParam=cpMin
 			;lParam=cpMax
-			test	[ebx].EDIT.nMode,MODE_BLOCK
-			.if ZERO?
+			.if !([ebx].EDIT.nMode&MODE_BLOCK)
 				.if ![ebx].EDIT.fHideSel
 					mov		eax,[ebx].EDIT.cpMin
 					.if eax!=[ebx].EDIT.cpMax
@@ -5074,8 +5037,7 @@ align 4
 			;wParam=0
 			;lParam=0
 			xor		eax,eax
-			test	[ebx].EDIT.nMode,MODE_BLOCK
-			.if ZERO?
+			.if !([ebx].EDIT.nMode&MODE_BLOCK)
 				mov		eax,[ebx].EDIT.rpUndo
 				.if eax
 					mov		eax,TRUE
@@ -5190,8 +5152,7 @@ align 4
 			jmp		ErrBeep
 		.endif
 		inc		nUndoid
-		test	[ebx].EDIT.nMode,MODE_BLOCK
-		.if ZERO?
+		.if !([ebx].EDIT.nMode&MODE_BLOCK)
 			invoke DeleteSelection,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
 			mov		[ebx].EDIT.cpMin,eax
 			mov		[ebx].EDIT.cpMax,eax
@@ -5483,14 +5444,12 @@ align 4
 
 		invoke SetWindowPos,[ebx].EDIT.hsta,HWND_TOP,0,0,0,0,SWP_NOSIZE or SWP_NOSIZE;SWP_NOREPOSITION
 		invoke SetWindowPos,[ebx].EDIT.hsbtn,HWND_TOP,0,0,0,0,SWP_NOSIZE or SWP_NOSIZE;SWP_NOREPOSITION
-		test	[ebx].EDIT.fstyle,STYLE_DRAGDROP
-		.if !ZERO?
+		.if [ebx].EDIT.fstyle&STYLE_DRAGDROP
 			invoke RegisterDragDrop,[ebx].EDIT.edta.hwnd,offset pIDropTarget
 			invoke RegisterDragDrop,[ebx].EDIT.edtb.hwnd,offset pIDropTarget
 		.endif
 	.elseif eax==WM_DESTROY
-		test	[ebx].EDIT.fstyle,STYLE_DRAGDROP
-		.if !ZERO?
+		.if [ebx].EDIT.fstyle&STYLE_DRAGDROP
 			invoke RevokeDragDrop,[ebx].EDIT.edta.hwnd
 			invoke RevokeDragDrop,[ebx].EDIT.edtb.hwnd
 		.endif
@@ -5577,15 +5536,13 @@ align 4
 		.endif
 		call	SizeIt
 		xor		edi,edi
-		test	[ebx].EDIT.fstyle,STYLE_NOLINENUMBER
-		.if ZERO?
+		.if !([ebx].EDIT.fstyle&STYLE_NOLINENUMBER)
 			invoke MoveWindow,[ebx].EDIT.hlin,0,[ebx].EDIT.rc.bottom,BTNWT,SBWT,TRUE
 			add		edi,BTNWT
 		.else
 			invoke MoveWindow,[ebx].EDIT.hlin,0,0,0,0,TRUE
 		.endif
-		test	[ebx].EDIT.fstyle,STYLE_NOCOLLAPSE
-		.if ZERO?
+		.if !([ebx].EDIT.fstyle&STYLE_NOCOLLAPSE)
 			invoke MoveWindow,[ebx].EDIT.hexp,edi,[ebx].EDIT.rc.bottom,BTNWT,SBWT,TRUE
 			add		edi,BTNWT
 			invoke MoveWindow,[ebx].EDIT.hcol,edi,[ebx].EDIT.rc.bottom,BTNWT,SBWT,TRUE
@@ -5594,8 +5551,7 @@ align 4
 			invoke MoveWindow,[ebx].EDIT.hexp,0,0,0,0,TRUE
 			invoke MoveWindow,[ebx].EDIT.hcol,0,0,0,0,TRUE
 		.endif
-		test	[ebx].EDIT.fstyleex,STYLEEX_LOCK
-		.if !ZERO?
+		.if [ebx].EDIT.fstyleex&STYLEEX_LOCK
 			invoke MoveWindow,[ebx].EDIT.hlock,edi,[ebx].EDIT.rc.bottom,BTNWT,SBWT,TRUE
 			add		edi,BTNWT
 		.else
@@ -5767,14 +5723,12 @@ SizeIt:
 		invoke MoveWindow,[ebx].EDIT.edtb.hwnd,0,0,ecx,edx,TRUE
 		mov		eax,[ebx].EDIT.rc.right
 		sub		eax,SBWT
-		test	[ebx].EDIT.fstyle,STYLE_NOSPLITT
-		.if ZERO?
+		.if !([ebx].EDIT.fstyle&STYLE_NOSPLITT)
 			invoke MoveWindow,[ebx].EDIT.hsbtn,eax,0,SBWT,BTNHT,TRUE
 		.else
 			invoke MoveWindow,[ebx].EDIT.hsbtn,0,0,0,0,TRUE
 		.endif
-		test	[ebx].EDIT.fstyle,STYLE_NOSTATE
-		.if ZERO?
+		.if !([ebx].EDIT.fstyle&STYLE_NOSTATE)
 			invoke MoveWindow,[ebx].EDIT.hsta,0,0,4,4,TRUE
 		.else
 			invoke MoveWindow,[ebx].EDIT.hsta,0,0,0,0,TRUE

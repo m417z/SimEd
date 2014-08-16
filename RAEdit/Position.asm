@@ -151,7 +151,7 @@ GetCharPtr proc uses ebx esi edi,hMem:DWORD,cp:DWORD
 	mov		edi,[ebx].EDIT.hChars
 	add		edi,[esi].LINE.rpChars
 	inc		edx
-	.if !ZERO?
+	.if edx!=0
 		push	ecx
 		mov		[ebx].EDIT.cpLine,ecx
 		sub		ecx,eax
@@ -322,7 +322,9 @@ GetLineFromYp proc uses ebx esi edi,hMem:DWORD,y:DWORD
 		mov		ebx,edx
 		.while eax<y
 			inc		ecx
-			.break .if ecx>=maxln
+			.if ecx>=maxln
+				.break
+			.endif
 			mov		edx,[esi+ecx*sizeof LINE].LINE.rpChars
 			.if [edi+edx].CHARS.state&STATE_HIDDEN
 				jmp		@f
@@ -405,7 +407,9 @@ GetCpFromXp proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,x:DWORD,fNoAdjust:DWO
 		mov		rect.right,edi
 	.endif
 	.while edi<[esi].CHARS.len
-		.break .if byte ptr [esi+edi+sizeof CHARS]==0Dh
+		.if byte ptr [esi+edi+sizeof CHARS]==0Dh
+			.break
+		.endif
 		push	rect.right
 		inc		edi
 		call	TestIt
@@ -417,7 +421,9 @@ GetCpFromXp proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,x:DWORD,fNoAdjust:DWO
 			shr		edx,1
 			sub		eax,edx
 		.endif
-		.break .if sdword ptr eax>x
+		.if sdword ptr eax>x
+			.break
+		.endif
 		inc		edi
 	.endw
 	pop		eax
@@ -525,8 +531,7 @@ GetCaretPoint proc uses ebx esi,hMem:DWORD,cp:DWORD,cpy:DWORD,lpPoint:DWORD
 	mov		ebx,hMem
 	invoke GetPosFromChar,ebx,cp,addr pt
 	mov		esi,lpPoint
-	test	[ebx].EDIT.nMode,MODE_BLOCK
-	.if !ZERO?
+	.if [ebx].EDIT.nMode&MODE_BLOCK
 		mov		eax,[ebx].EDIT.blrg.clMin
 		mov		ecx,[ebx].EDIT.fntinfo.fntwt
 		mul		ecx

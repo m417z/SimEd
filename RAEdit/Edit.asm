@@ -135,8 +135,7 @@ DeleteLine proc uses ebx esi edi,hMem:DWORD,nLine:DWORD
 		mov		edx,[esi+eax+sizeof LINE]
 		mov		[ebx].EDIT.rpChars,edx
 		add		edi,[esi+eax]
-		test	[edi].CHARS.state,STATE_HIDDEN
-		.if !ZERO?
+		.if [edi].CHARS.state&STATE_HIDDEN
 			dec		[ebx].EDIT.nHidden
 		.endif
 		or		[edi].CHARS.state,STATE_GARBAGE
@@ -174,8 +173,7 @@ InsertChar proc uses ebx esi edi,hMem:DWORD,cp:DWORD,nChr:DWORD
 	mov		esi,[ebx].EDIT.rpChars
 	add		esi,[ebx].EDIT.hChars
 	mov		ecx,[esi].CHARS.state
-	test	ecx,STATE_HIDDEN
-	.if !ZERO?
+	.if ecx&STATE_HIDDEN
 		pushad
 		invoke TestExpand,ebx,[ebx].EDIT.line
 		popad
@@ -310,8 +308,7 @@ DeleteChar proc uses ebx esi edi,hMem:DWORD,cp:DWORD
 	mov		edi,eax
 	mov		esi,[ebx].EDIT.rpChars
 	add		esi,[ebx].EDIT.hChars
-	test	[esi].CHARS.state,STATE_HIDDEN
-	.if !ZERO?
+	.if [esi].CHARS.state&STATE_HIDDEN
 		invoke TestExpand,ebx,[ebx].EDIT.line
 	.endif
 	movzx	eax,byte ptr [esi+edi+sizeof CHARS]
@@ -344,7 +341,9 @@ DeleteChar proc uses ebx esi edi,hMem:DWORD,cp:DWORD
 					xor		edi,edi
 					.while edi<[esi].CHARS.len
 						movzx	eax,byte ptr [esi+edi+sizeof CHARS]
-						.break .if eax==VK_RETURN
+						.if eax==VK_RETURN
+							.break
+						.endif
 						invoke InsertChar,ebx,cp,eax
 						inc		edi
 						inc		cp
@@ -379,7 +378,7 @@ DeleteChar proc uses ebx esi edi,hMem:DWORD,cp:DWORD
 		inc		[ebx].EDIT.nchange
 	.elseif al && [esi].CHARS.len
 		dec		[esi].CHARS.len
-		.if !ZERO?
+		.if [esi].CHARS.len!=0
 			.while edi<[esi].CHARS.len
 				mov		al,[esi+edi+sizeof CHARS+1]
 				mov		[esi+edi+sizeof CHARS],al

@@ -170,8 +170,7 @@ Copy proc uses ebx,hMem:DWORD
 	LOCAL	hCMem:DWORD
 
 	mov		ebx,hMem
-	test	[ebx].EDIT.nMode,MODE_BLOCK
-	.if ZERO?
+	.if !([ebx].EDIT.nMode&MODE_BLOCK)
 		mov		eax,[ebx].EDIT.cpMin
 		sub		eax,[ebx].EDIT.cpMax
 		.if eax
@@ -362,8 +361,7 @@ Paste proc uses ebx esi edi,hMem:DWORD,hWin:DWORD,hData:DWORD
 	.else
 		lea		esi,[ebx].EDIT.edtb
 	.endif
-	test	[ebx].EDIT.nMode,MODE_BLOCK
-	.if ZERO?
+	.if !([ebx].EDIT.nMode&MODE_BLOCK)
 		invoke DeleteSelection,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
 		mov		[ebx].EDIT.cpMin,eax
 		mov		[ebx].EDIT.cpMax,eax
@@ -396,8 +394,7 @@ Cut proc uses ebx esi,hMem:DWORD,hWin:DWORD
 	.else
 		lea		esi,[ebx].EDIT.edtb
 	.endif
-	test	[ebx].EDIT.nMode,MODE_BLOCK
-	.if ZERO?
+	.if !([ebx].EDIT.nMode&MODE_BLOCK)
 		invoke Copy,ebx
 		invoke DeleteSelection,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
 		mov		[ebx].EDIT.cpMin,eax

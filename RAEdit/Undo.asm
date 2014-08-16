@@ -297,8 +297,7 @@ SaveUndo endp
 Undo proc uses ebx,hMem:DWORD,hWin:DWORD
 
 	mov		ebx,hMem
-	test	[ebx].EDIT.nMode,MODE_BLOCK
-	.if ZERO?
+	.if !([ebx].EDIT.nMode&MODE_BLOCK)
 		invoke DoUndo,ebx
 	.else
 		invoke DoUndo,ebx
@@ -318,8 +317,7 @@ Undo endp
 Redo proc uses ebx,hMem:DWORD,hWin:DWORD
 
 	mov		ebx,hMem
-	test	[ebx].EDIT.nMode,MODE_BLOCK
-	.if ZERO?
+	.if !([ebx].EDIT.nMode&MODE_BLOCK)
 		invoke DoRedo,ebx
 	.else
 		invoke DoRedo,ebx

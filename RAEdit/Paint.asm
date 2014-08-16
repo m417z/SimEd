@@ -45,20 +45,17 @@ DrawLine proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,nLine:DWORD,cp:DWORD,hDC
 	mov		fDot,eax
 	mov		esi,lpChars
 	mov		edi,[esi].CHARS.len
-	test	[esi].CHARS.state,STATE_HIDDEN
-	.if ZERO?
+	.if !([esi].CHARS.state&STATE_HIDDEN)
 		mov		nCmnt,0
 		invoke CopyRect,addr rect,lpRect
 		mov		eax,rect.top
 		add		eax,[ebx].EDIT.fntinfo.fntht
 		mov		rect.bottom,eax
 		mov		edx,[esi].CHARS.state
-		test	edx,STATE_ALTHILITE
-		.if !ZERO?
+		.if edx&STATE_ALTHILITE
 			inc		nGroup
 		.endif
-		test	edx,STATE_REDTEXT
-		.if !ZERO?
+		.if edx&STATE_REDTEXT
 			inc		fRed
 		.endif
 		mov		eax,edx
@@ -90,8 +87,7 @@ DrawLine proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,nLine:DWORD,cp:DWORD,hDC
 				mov		lpCR,eax
 				mov		byte ptr [eax],' '
 			.endif
-			test	[ebx].EDIT.nMode,MODE_BLOCK
-			.if ZERO?
+			.if !([ebx].EDIT.nMode&MODE_BLOCK)
 				mov		eax,[ebx].EDIT.cpMin
 				mov		ecx,[ebx].EDIT.cpMax
 				.if ![ebx].EDIT.fHideSel && eax!=ecx
@@ -160,8 +156,7 @@ DrawLine proc uses ebx esi edi,hMem:DWORD,lpChars:DWORD,nLine:DWORD,cp:DWORD,hDC
 			and		edx,3
 			call	DrawSelBck
 			mov		eax,[ebx].EDIT.fstyle
-			test	eax,STYLE_NOHILITE
-			.if !ZERO?
+			.if eax&STYLE_NOHILITE
 				mov		fEnd,99
 			.endif
 			.if fCmnt
@@ -748,7 +743,7 @@ TestWord:
 	  @@:
 		mov		ah,byte ptr [ebx+edx].WORDINFO.fend
 		call	CmpWord
-		.if !ZERO?
+		.if eax!=0
 			mov		edx,[ebx+edx].WORDINFO.rpprev
 			jmp		TestWord1
 		.endif
@@ -774,13 +769,11 @@ CmpWord:
 	.if al=='.' && edi && fDot
 		mov		al,[esi-1]
 		.if al!=' ' && al!=VK_TAB
-			or		eax,eax
 			jmp		CmpWord2
 		.endif
 	.elseif edi
 		mov		al,[esi-1]
 		.if al=='.' && fDot
-			or		eax,eax
 			jmp		CmpWord2
 		.endif
 	.endif
@@ -795,6 +788,7 @@ CmpWord:
 		and		al,5Fh
 	.endif
 	.if al!=tmp
+		mov		eax,1
 		jmp		CmpWord2
 	.endif
   CmpWord1:
@@ -802,6 +796,7 @@ CmpWord:
 	.if ecx!=0
 		jmp		@b
 	.endif
+	xor		eax,eax
   CmpWord2:
 	pop		esi
 	pop		ebx
@@ -841,8 +836,7 @@ BackFill:
 	retn
 
 DrawCmntBack:
-	test	[ebx].EDIT.fstyle,STYLE_HILITECOMMENT
-	.if !ZERO?
+	.if [ebx].EDIT.fstyle&STYLE_HILITECOMMENT
 		push	eax
 		push	rect.left
 		push	rect.right
@@ -880,8 +874,7 @@ DrawCmntBack:
 DrawSelBck:
 	mov		srect.left,4096
 	mov		srect.right,4096
-	test	[ebx].EDIT.nMode,MODE_BLOCK
-	.if ZERO?
+	.if !([ebx].EDIT.nMode&MODE_BLOCK)
 		mov		eax,cpMin
 		.if eax!=cpMax
 			.if !cpMin && edi<=cpMax
@@ -962,8 +955,7 @@ SetBlockMarkers proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,nMax:DWORD
 	LOCAL	fcmnt:DWORD
 
 	mov		ebx,hMem
-	test	[ebx].EDIT.fstyleex,STYLEEX_BLOCKGUIDE
-	.if !ZERO?
+	.if [ebx].EDIT.fstyleex&STYLEEX_BLOCKGUIDE
 		mov		fcmnt,0
 		;Clear block markers
 		mov		edx,[ebx].EDIT.rpLineFree
@@ -980,8 +972,7 @@ SetBlockMarkers proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,nMax:DWORD
 			mov		edx,[edx]
 			add		edx,[ebx].EDIT.hChars
 			and		[edx].CHARS.state,-1 xor (STATE_BLOCKSTART or STATE_BLOCK or STATE_BLOCKEND)
-			test	[edx].CHARS.state,STATE_HIDDEN
-			.if ZERO?
+			.if !([edx].CHARS.state&STATE_HIDDEN)
 				dec		nLines
 			.endif
 			inc		eax
@@ -1004,10 +995,8 @@ SetBlockMarkers proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,nMax:DWORD
 				add		edi,[ebx].EDIT.hLine
 				mov		edi,[edi]
 				add		edi,[ebx].EDIT.hChars
-				test	[edi].CHARS.state,STATE_HIDDEN
-				.if ZERO?
-					test	[edi].CHARS.state,STATE_COMMENT
-					.if !ZERO?
+				.if !([edi].CHARS.state&STATE_HIDDEN)
+					.if [edi].CHARS.state&STATE_COMMENT
 						mov		fcmnt,edi
 					.elseif fcmnt
 						mov		edx,fcmnt
@@ -1034,8 +1023,7 @@ SetBlockMarkers proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,nMax:DWORD
 			.endw
 			.if esi<nLnMax && nLines
 				mov		edx,lpBlockDef
-				test	[edx].RABLOCKDEF.flag,BD_SEGMENTBLOCK
-				.if !ZERO?
+				.if [edx].RABLOCKDEF.flag&BD_SEGMENTBLOCK
 					dec		esi
 					inc		nLines
 					mov		edi,esi
@@ -1065,8 +1053,7 @@ BlockRoot:
 			mov		lpBlockDef,eax
 			invoke GetBlock,ebx,esi,lpBlockDef
 			mov		edx,lpBlockDef
-			test	[edx].RABLOCKDEF.flag,BD_INCLUDELAST
-			.if ZERO?
+			.if !([edx].RABLOCKDEF.flag&BD_INCLUDELAST)
 				inc		eax
 			.endif
 			add		eax,esi
@@ -1077,8 +1064,7 @@ BlockRoot:
 				.if sdword ptr eax>esi
 					mov		esi,eax
 				.endif
-				test	[edx].RABLOCKDEF.flag,BD_SEGMENTBLOCK
-				.if !ZERO?
+				.if [edx].RABLOCKDEF.flag&BD_SEGMENTBLOCK
 					dec		esi
 				.endif
 				jmp		BlockRoot
@@ -1094,11 +1080,9 @@ DrawChangedState proc uses ebx edi,hMem:DWORD,hDC:HDC,lpLine:DWORD,x:DWORD,y:DWO
 	LOCAL	rect:RECT
 
 	mov		ebx,hMem
-	test	[ebx].EDIT.fstyleex,STILEEX_LINECHANGED
-	.if !ZERO?
+	.if [ebx].EDIT.fstyleex&STILEEX_LINECHANGED
 		mov		edi,lpLine
-		test	[edi].CHARS.state,STATE_CHANGESAVED
-		.if !ZERO?
+		.if [edi].CHARS.state&STATE_CHANGESAVED
 			invoke CreateSolidBrush,[ebx].EDIT.clr.changesaved
 			mov		hBr,eax
 			xor		eax,eax
@@ -1115,8 +1099,7 @@ DrawChangedState proc uses ebx edi,hMem:DWORD,hDC:HDC,lpLine:DWORD,x:DWORD,y:DWO
 			invoke FillRect,hDC,addr rect,hBr
 			invoke DeleteObject,hBr
 		.else
-			test	[edi].CHARS.state,STATE_CHANGED
-			.if !ZERO?
+			.if [edi].CHARS.state&STATE_CHANGED
 				invoke CreateSolidBrush,[ebx].EDIT.clr.changed
 				mov		hBr,eax
 				xor		eax,eax
@@ -1162,8 +1145,7 @@ RAEditPaint proc uses ebx esi edi,hWin:HWND
 	.endif
 	invoke BeginPaint,hWin,addr ps
 	.if [ebx].EDIT.linenrwt
-		test	[ebx].EDIT.fstyle,STYLE_AUTOSIZELINENUM
-		.if !ZERO?
+		.if [ebx].EDIT.fstyle&STYLE_AUTOSIZELINENUM
 			xor		eax,eax
 			mov		rect1.left,eax
 			mov		rect1.top,eax
@@ -1197,8 +1179,7 @@ RAEditPaint proc uses ebx esi edi,hWin:HWND
 	invoke CreateCompatibleDC,ps.hdc
 	mov		mDC,eax
 	invoke GetClientRect,hWin,addr rect
-	test	[ebx].EDIT.fstyle,STYLE_NOVSCROLL
-	.if ZERO?
+	.if !([ebx].EDIT.fstyle&STYLE_NOVSCROLL)
 		mov		eax,SBWT
 		sub		rect.right,eax
 	.endif
@@ -1301,8 +1282,7 @@ RAEditPaint proc uses ebx esi edi,hWin:HWND
 		mov		edi,[edi].LINE.rpChars
 		add		edi,[ebx].EDIT.hChars
 		xor		edx,edx
-		test	[edi].CHARS.state,STATE_HIDDEN
-		.if ZERO?
+		.if !([edi].CHARS.state&STATE_HIDDEN)
 			mov		eax,rect.top
 			add		eax,[ebx].EDIT.fntinfo.fntht
 			.if eax>ps.rcPaint.top
@@ -1315,10 +1295,8 @@ RAEditPaint proc uses ebx esi edi,hWin:HWND
 				dec		edx
 				invoke DrawLine,ebx,edi,edx,cp,mDC,addr rect1
 				invoke SelectClipRgn,mDC,hRgn1
-				test	[edi].CHARS.state,STATE_DIVIDERLINE
-				.if !ZERO?
-					test	[ebx].EDIT.fstyle,STYLE_NODIVIDERLINE
-					.if ZERO?
+				.if [edi].CHARS.state&STATE_DIVIDERLINE
+					.if !([ebx].EDIT.fstyle&STYLE_NODIVIDERLINE)
 						invoke MoveToEx,mDC,rcRgn1.left,rect1.top,NULL
 						invoke LineTo,mDC,rcRgn1.right,rect1.top
 					.endif
@@ -1328,8 +1306,7 @@ RAEditPaint proc uses ebx esi edi,hWin:HWND
 				.if ps.rcPaint.left<eax
 					invoke SelectClipRgn,mDC,NULL
 					call	DrawBlockMarker
-					test	[edi].CHARS.state,STATE_BREAKPOINT
-					.if !ZERO?
+					.if [edi].CHARS.state&STATE_BREAKPOINT
 						mov		eax,[ebx].EDIT.selbarwt
 						add		eax,[ebx].EDIT.linenrwt
 						sub		eax,15+12
@@ -1443,8 +1420,7 @@ RAEditPaint proc uses ebx esi edi,hWin:HWND
 
 DrawBlockMarker:
 	invoke DrawChangedState,ebx,mDC,edi,ps.rcPaint.left,rect1.top
-	test	[edi].CHARS.state,STATE_BLOCK
-	.if !ZERO?
+	.if [edi].CHARS.state&STATE_BLOCK
 		xor		eax,eax
 		sub		eax,ps.rcPaint.left
 		add		eax,[ebx].EDIT.linenrwt
@@ -1457,8 +1433,7 @@ DrawBlockMarker:
 		add		edx,rect1.top
 		invoke LineTo,mDC,eax,edx
 	.endif
-	test	[edi].CHARS.state,STATE_BLOCKEND
-	.if !ZERO?
+	.if [edi].CHARS.state&STATE_BLOCKEND
 		xor		eax,eax
 		sub		eax,ps.rcPaint.left
 		add		eax,[ebx].EDIT.linenrwt
@@ -1528,8 +1503,7 @@ RAEditPaintNoBuff proc uses ebx esi edi,hWin:HWND
 	.endif
 	invoke BeginPaint,hWin,addr ps
 	.if [ebx].EDIT.linenrwt
-		test	[ebx].EDIT.fstyle,STYLE_AUTOSIZELINENUM
-		.if !ZERO?
+		.if [ebx].EDIT.fstyle&STYLE_AUTOSIZELINENUM
 			xor		eax,eax
 			mov		rect1.left,eax
 			mov		rect1.top,eax
@@ -1568,8 +1542,7 @@ RAEditPaintNoBuff proc uses ebx esi edi,hWin:HWND
 	;Draw text transparent
 	invoke SetBkMode,ps.hdc,TRANSPARENT
 	invoke GetClientRect,hWin,addr rect
-	test	[ebx].EDIT.fstyle,STYLE_NOVSCROLL
-	.if ZERO?
+	.if !([ebx].EDIT.fstyle&STYLE_NOVSCROLL)
 		mov		eax,SBWT
 		sub		rect.right,eax
 	.endif
@@ -1648,8 +1621,7 @@ RAEditPaintNoBuff proc uses ebx esi edi,hWin:HWND
 		mov		edi,[edi].LINE.rpChars
 		add		edi,[ebx].EDIT.hChars
 		xor		edx,edx
-		test	[edi].CHARS.state,STATE_HIDDEN
-		.if ZERO?
+		.if !([edi].CHARS.state&STATE_HIDDEN)
 			mov		eax,rect1.top
 			add		eax,[ebx].EDIT.fntinfo.fntht
 			.if eax>=ps.rcPaint.top
@@ -1665,10 +1637,8 @@ RAEditPaintNoBuff proc uses ebx esi edi,hWin:HWND
 				dec		edx
 				invoke DrawLine,ebx,edi,edx,cp,ps.hdc,addr rect1
 				invoke SelectClipRgn,ps.hdc,hRgn1
-				test	[edi].CHARS.state,STATE_DIVIDERLINE
-				.if !ZERO?
-					test	[ebx].EDIT.fstyle,STYLE_NODIVIDERLINE
-					.if ZERO?
+				.if [edi].CHARS.state&STATE_DIVIDERLINE
+					.if !([ebx].EDIT.fstyle&STYLE_NODIVIDERLINE)
 						mov		eax,[ebx].EDIT.selbarwt
 						add		eax,[ebx].EDIT.linenrwt
 						invoke MoveToEx,ps.hdc,eax,rect1.top,NULL
@@ -1680,8 +1650,7 @@ RAEditPaintNoBuff proc uses ebx esi edi,hWin:HWND
 				.if ps.rcPaint.left<eax
 					invoke SelectClipRgn,ps.hdc,NULL
 					call	DrawBlockMarker
-					test	[edi].CHARS.state,STATE_BREAKPOINT
-					.if !ZERO?
+					.if [edi].CHARS.state&STATE_BREAKPOINT
 						mov		eax,[ebx].EDIT.selbarwt
 						add		eax,[ebx].EDIT.linenrwt
 						sub		eax,15+12
@@ -1779,8 +1748,7 @@ RAEditPaintNoBuff proc uses ebx esi edi,hWin:HWND
 
 DrawBlockMarker:
 	invoke DrawChangedState,ebx,ps.hdc,edi,0,rect1.top
-	test	[edi].CHARS.state,STATE_BLOCK
-	.if !ZERO?
+	.if [edi].CHARS.state&STATE_BLOCK
 		mov		eax,[ebx].EDIT.linenrwt
 		add		eax,15
 		mov		edx,rect1.top
@@ -1791,8 +1759,7 @@ DrawBlockMarker:
 		add		edx,rect1.top
 		invoke LineTo,ps.hdc,eax,edx
 	.endif
-	test	[edi].CHARS.state,STATE_BLOCKEND
-	.if !ZERO?
+	.if [edi].CHARS.state&STATE_BLOCKEND
 		mov		eax,[ebx].EDIT.linenrwt
 		add		eax,15
 		mov		edx,rect1.top

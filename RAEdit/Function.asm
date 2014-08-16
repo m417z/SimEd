@@ -59,13 +59,17 @@ FindTheText proc uses ebx esi edi,hMem:DWORD,pFind:DWORD,fMC:DWORD,fWW:DWORD,fWh
 			xor		esi,esi
 			.while len[esi*4]
 				call	TstLnDown
-				.break .if eax==-1
+				.if eax==-1
+					.break
+				.endif
 				inc		nLine
 				inc		esi
 				xor		ecx,ecx
 			.endw
 			pop		nLine
-			.break .if eax!=-1
+			.if eax!=-1
+				.break
+			.endif
 			mov		edx,lnlen
 			add		cpMin,edx
 			mov		edx,cpMin
@@ -91,18 +95,24 @@ FindTheText proc uses ebx esi edi,hMem:DWORD,pFind:DWORD,fMC:DWORD,fWW:DWORD,fWh
 			xor		esi,esi
 			.while len[esi*4]
 				call	TstLnUp
-				.break .if eax==-1
+				.if eax==-1
+					.break
+				.endif
 				inc		nLine
 				inc		esi
 				xor		ecx,ecx
 			.endw
 			pop		nLine
-			.break .if eax!=-1 && eax<=cp
+			.if eax!=-1 && eax<=cp
+				.break
+			.endif
 			dec		nLine
 			mov		edi,nLine
 			shl		edi,2
 			mov		eax,-1
-			.break .if edi>=[ebx].EDIT.rpLineFree
+			.if edi>=[ebx].EDIT.rpLineFree
+				.break
+			.endif
 			invoke GetCpFromLine,ebx,nLine
 			mov		cpMin,eax
 			add		edi,[ebx].EDIT.hLine
@@ -317,21 +327,17 @@ FindTextEx proc uses ebx esi edi,hMem:DWORD,fFlag:DWORD,lpFindTextEx:DWORD
 		xor		eax,eax
 		mov		fMC,eax
 		mov		fWW,eax
-		test	fFlag,FR_WHOLEWORD
-		.if !ZERO?
+		.if fFlag&FR_WHOLEWORD
 			inc		fWW
 		.endif
-		test	fFlag,FR_MATCHCASE
-		.if !ZERO?
+		.if fFlag&FR_MATCHCASE
 			inc		fMC
 		.endif
 		mov		eax,[esi].FINDTEXTEX.chrg.cpMin
-		test	fFlag,FR_DOWN
-		.if !ZERO?
+		.if fFlag&FR_DOWN
 			;Down
 			xor		eax,eax
-			test	fFlag,FR_IGNOREWHITESPACE
-			.if !ZERO?
+			.if fFlag&FR_IGNOREWHITESPACE
 				inc		eax
 			.endif
 			mov		ecx,[esi].FINDTEXTEX.chrg.cpMax
@@ -343,8 +349,7 @@ FindTextEx proc uses ebx esi edi,hMem:DWORD,fFlag:DWORD,lpFindTextEx:DWORD
 		.else
 			;Up
 			xor		eax,eax
-			test	fFlag,FR_IGNOREWHITESPACE
-			.if !ZERO?
+			.if fFlag&FR_IGNOREWHITESPACE
 				inc		eax
 			.endif
 			invoke FindTheText,ebx,lpText,fMC,fWW,eax,[esi].FINDTEXTEX.chrg.cpMin,[esi].FINDTEXTEX.chrg.cpMax,-1
@@ -389,8 +394,7 @@ TestLine:
 	add		edi,[ebx].EDIT.hLine
 	mov		edi,[edi].LINE.rpChars
 	add		edi,[ebx].EDIT.hChars
-	test	[edi].CHARS.state,STATE_COMMENT
-	.if !ZERO?
+	.if [edi].CHARS.state&STATE_COMMENT
 		mov		ax,[esi]
 		.if [ebx].EDIT.ccmntblocks==1 && ax!="/*" && ax!="*/"
 			jmp		Nf
@@ -481,8 +485,7 @@ TestLine:
 				.if eax==CT_STRING
 					call	SkipString
 				.elseif word ptr [edi+ecx+sizeof CHARS]=="/'"
-					test	[edi].CHARS.state,STATE_COMMENT
-					.if !ZERO?
+					.if [edi].CHARS.state&STATE_COMMENT
 						dec		fCmnt
 					.endif
 					inc		ecx
@@ -557,7 +560,9 @@ TestLine:
 			.elseif esi==CT_CMNTDBLCHAR
 				movzx	esi,byte ptr [edi+ecx+sizeof CHARS+1]
 				movzx	esi,byte ptr [esi+offset CharTab]
-				.break .if esi==CT_CMNTDBLCHAR
+				.if esi==CT_CMNTDBLCHAR
+					.break
+				.endif
 			.elseif esi==CT_STRING
 				call	SkipString
 			.endif
@@ -576,7 +581,9 @@ SkipString:
 	mov		al,[edi+ecx+sizeof CHARS]
 	inc		ecx
 	.while ecx<[edi].CHARS.len
-		.break .if al==[edi+ecx+sizeof CHARS]
+		.if al==[edi+ecx+sizeof CHARS]
+			.break
+		.endif
 		inc		ecx
 	.endw
 	pop		eax
@@ -588,7 +595,9 @@ SkipCmnt:
 		inc		ecx
 		.while ecx<[edi].CHARS.len
 			inc		ecx
-			.break .if word ptr [edi+ecx+sizeof CHARS]=="/'"
+			.if word ptr [edi+ecx+sizeof CHARS]=="/'"
+				.break
+			.endif
 		.endw
 		.if word ptr [edi+ecx+sizeof CHARS]=="/'"
 			add		ecx,2
@@ -723,7 +732,9 @@ TestWord:
 	.elseif ax=='(#'
 		inc		esi
 		.while ecx<[edi].CHARS.len
-			.break .if byte ptr [edi+ecx+sizeof CHARS]=='('
+			.if byte ptr [edi+ecx+sizeof CHARS]=='('
+				.break
+			.endif
 			inc		ecx
 		.endw
 		xor		eax,eax
@@ -807,7 +818,9 @@ TestWord:
 			call	TestWord
 			pop		edx
 			inc		eax
-		  .break .if eax
+		  .if eax
+		  	.break
+		  .endif
 			mov		esi,tmpesi
 			mov		ecx,edx
 			call	SkipWord
@@ -817,7 +830,9 @@ TestWord:
 			call	SkipSpc
 			call	SkipCmnt
 			xor		eax,eax
-		  .break .if ecx>=[edi].CHARS.len
+		  .if ecx>=[edi].CHARS.len
+		  	.break
+		  .endif
 		.endw
 		retn
 	.elseif ax==' $'
@@ -891,8 +906,7 @@ SetBookMark proc uses ebx,hMem:DWORD,nLine:DWORD,nType:DWORD
 		and		[edx].CHARS.state,-1 xor STATE_BMMASK
 		or		[edx].CHARS.state,eax
 		inc		nBmid
-		test	[edx].CHARS.state,STATE_HIDDEN
-		.if ZERO?
+		.if !([edx].CHARS.state&STATE_HIDDEN)
 			mov		eax,nBmid
 			mov		[edx].CHARS.bmid,eax
 		.endif
@@ -936,8 +950,7 @@ ClearBookMarks proc uses ebx esi edi,hMem:DWORD,nType:DWORD
 		and		ecx,STATE_BMMASK
 		.if eax==ecx
 			and		[edx].CHARS.state,-1 xor STATE_BMMASK
-			test	[edx].CHARS.state,STATE_HIDDEN
-			.if ZERO?
+			.if !([edx].CHARS.state&STATE_HIDDEN)
 				mov		[edx].CHARS.bmid,0
 			.endif
 		.endif
@@ -992,8 +1005,7 @@ NextBreakpoint proc uses ebx edi,hMem:DWORD,nLine:DWORD
 		add		edx,[ebx].EDIT.hLine
 		mov		edx,[edx].LINE.rpChars
 		add		edx,[ebx].EDIT.hChars
-		test	[edx].CHARS.state,STATE_BREAKPOINT
-		.if !ZERO?
+		.if [edx].CHARS.state&STATE_BREAKPOINT
 			mov		eax,edi
 			shr		eax,2
 			.break
@@ -1084,8 +1096,7 @@ IsLineLocked proc uses ebx,hMem:DWORD,nLine:DWORD
 
 	mov		ebx,hMem
 	xor		eax,eax
-	test	[ebx].EDIT.fstyle,STYLE_READONLY
-	.if ZERO?
+	.if !([ebx].EDIT.fstyle&STYLE_READONLY)
 		mov		edx,nLine
 		shl		edx,2
 		.if edx<[ebx].EDIT.rpLineFree
@@ -1112,8 +1123,7 @@ HideLine proc uses ebx,hMem:DWORD,nLine:DWORD,fHide:DWORD
 		mov		eax,[eax].LINE.rpChars
 		add		eax,[ebx].EDIT.hChars
 		.if fHide
-			test	[eax].CHARS.state,STATE_HIDDEN
-			.if ZERO?
+			.if !([eax].CHARS.state&STATE_HIDDEN)
 				mov		ecx,[eax].CHARS.len
 				.if byte ptr [eax+ecx+sizeof CHARS-1]==0Dh
 					or		[eax].CHARS.state,STATE_HIDDEN
@@ -1125,8 +1135,7 @@ HideLine proc uses ebx,hMem:DWORD,nLine:DWORD,fHide:DWORD
 				.endif
 			.endif
 		.else
-			test	[eax].CHARS.state,STATE_HIDDEN
-			.if !ZERO?
+			.if [eax].CHARS.state&STATE_HIDDEN
 				and		[eax].CHARS.state,-1 xor STATE_HIDDEN
 				dec		[ebx].EDIT.nHidden
 				call	SetYP
@@ -1896,8 +1905,7 @@ SelChange proc uses ebx,hMem:DWORD,nType:DWORD
 	mov		sc.nmhdr.hwndFrom,eax
 	mov		sc.nmhdr.idFrom,edx
 	mov		sc.nmhdr.code,EN_SELCHANGE
-	test	[ebx].EDIT.nMode,MODE_BLOCK
-	.if ZERO?
+	.if !([ebx].EDIT.nMode&MODE_BLOCK)
 		mov		eax,[ebx].EDIT.cpMin
 		mov		sc.chrg.cpMin,eax
 		mov		eax,[ebx].EDIT.cpMax
@@ -2006,14 +2014,15 @@ IsCharPos proc uses ebx esi,hMem:DWORD,cp:DWORD
 	mov		nMax,eax
 	mov		esi,[ebx].EDIT.rpChars
 	add		esi,[ebx].EDIT.hChars
-	test	[esi].CHARS.state,STATE_COMMENT
-	.if ZERO?
+	.if !([esi].CHARS.state&STATE_COMMENT)
 		xor		ecx,ecx
 		.while ecx<nMax
 			.if [ebx].EDIT.ccmntblocks==1 && word ptr [esi+ecx+sizeof CHARS]=="*/"
 				add		ecx,2
 				.while ecx<nMax
-					.break .if word ptr [esi+ecx+sizeof CHARS]=="/*"
+					.if word ptr [esi+ecx+sizeof CHARS]=="/*"
+						.break
+					.endif
 					inc		ecx
 				.endw
 				.if word ptr [esi+ecx+sizeof CHARS]=="/*"
@@ -2026,7 +2035,9 @@ IsCharPos proc uses ebx esi,hMem:DWORD,cp:DWORD
 			.elseif [ebx].EDIT.ccmntblocks==2 && word ptr [esi+ecx+sizeof CHARS]=="'/"
 				add		ecx,2
 				.while ecx<nMax
-					.break .if word ptr [esi+ecx+sizeof CHARS]=="/'"
+					.if word ptr [esi+ecx+sizeof CHARS]=="/'"
+						.break
+					.endif
 					inc		ecx
 				.endw
 				.if word ptr [esi+ecx+sizeof CHARS]=="/'"
@@ -2053,7 +2064,9 @@ IsCharPos proc uses ebx esi,hMem:DWORD,cp:DWORD
 					mov		al,byte ptr [esi+ecx+sizeof CHARS]
 					.while ecx<nMax
 						inc		ecx
-						.break .if al==byte ptr [esi+ecx+sizeof CHARS]
+						.if al==byte ptr [esi+ecx+sizeof CHARS]
+							.break
+						.endif
 					.endw
 					.if ecx>=nMax
 						mov		eax,3
@@ -2093,7 +2106,7 @@ BracketMatchRight proc uses ebx esi edi,hMem:DWORD,nChr:DWORD,nMatch:DWORD,cp:DW
 			pop		edx
 			.if !eax
 				dec		nCount
-				.if ZERO?
+				.if nCount==0
 					mov		eax,edx
 					add		eax,[ebx].EDIT.cpLine
 					ret
@@ -2168,7 +2181,7 @@ BracketMatchLeft proc uses ebx esi edi,hMem:DWORD,nChr:DWORD,nMatch:DWORD,cp:DWO
 			pop		edx
 			.if !eax
 				dec		nCount
-				.if ZERO?
+				.if nCount==0
 					mov		eax,edx
 					add		eax,[ebx].EDIT.cpLine
 					jmp		Ex
@@ -2296,9 +2309,13 @@ GetLineBegin proc uses ebx esi edi,hMem:DWORD,nLine:DWORD
 			mov		esi,[edi].LINE.rpChars
 			add		esi,[ebx].EDIT.hChars
 			mov		ecx,[esi].CHARS.len
-			.break .if ecx<2
+			.if ecx<2
+				.break
+			.endif
 			mov		al,[esi+ecx+sizeof CHARS-2]
-			.break .if al!=bracketcont && al!=bracketcont[1]
+			.if al!=bracketcont && al!=bracketcont[1]
+				.break
+			.endif
 		.endw
 		mov		eax,nLine
 		inc		eax
