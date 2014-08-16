@@ -220,9 +220,11 @@ SetHiliteWords proc public uses esi edi,nColor:DWORD,lpWords:DWORD
 			.endif
 			push	eax
 			call	TestWord
-			or		eax,eax
+			mov		ecx,eax
 			pop		eax
-			jne		NxtWrd
+			.if ecx!=0
+				jmp		NxtWrd
+			.endif
 			;pointer to previous
 			mov		edx,[edi+eax*4]
 			;pointer to free
@@ -283,8 +285,9 @@ TestWord:
 	mov		edi,hWrdMem
 	mov		edx,[edi+eax*4]
 	xor		eax,eax
-	or		edx,edx
-	je		Ex
+	.if edx==0
+		jmp		Ex
+	.endif
   @@:
 	mov		eax,[edi+edx].WORDINFO.fend
 	mov		fEnd2,eax
@@ -797,8 +800,9 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 					mov		[ebx].EDIT.cpMax,ecx
 				.endif
 				invoke IsLineHidden,ebx,edx
-				or		eax,eax
-				jne		@b
+				.if eax!=0
+					jmp		@b
+				.endif
 				invoke SetCaretVisible,hWin,[esi].RAEDT.cpy
 				invoke SetCaret,ebx,[esi].RAEDT.cpy
 				.if !fShift && fSel
@@ -890,8 +894,9 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 				shl		eax,2
 				.if eax<[ebx].EDIT.rpLineFree
 					invoke IsLineHidden,ebx,edx
-					or		eax,eax
-					jne		@b
+					.if eax!=0
+						jmp		@b
+					.endif
 				.endif
 				invoke SetCaretVisible,hWin,[esi].RAEDT.cpy
 				invoke SetCaret,ebx,[esi].RAEDT.cpy
@@ -1329,8 +1334,9 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 				;Shift+Insert, Paste
 				inc		nUndoid
 				invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
-				or		eax,eax
-				jne		ErrBeep
+				.if eax!=0
+					jmp		ErrBeep
+				.endif
 				invoke Paste,ebx,hWin,NULL
 				inc		nUndoid
 			.elseif !fShift && fControl
@@ -1364,8 +1370,9 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 					.if eax!=[ebx].EDIT.cpMax
 						;Selection
 						invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
-						or		eax,eax
-						jne		ErrBeep
+						.if eax!=0
+							jmp		ErrBeep
+						.endif
 						inc		nUndoid
 						invoke DeleteSelection,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
 						mov		[ebx].EDIT.cpMin,eax
@@ -1393,8 +1400,9 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 						;Single char
 						inc		eax
 						invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,eax
-						or		eax,eax
-						jne		ErrBeep
+						.if eax!=0
+							jmp		ErrBeep
+						.endif
 						invoke GetChar,ebx,[ebx].EDIT.cpMin
 						.if al==VK_RETURN
 							invoke GetBookMark,ebx,[ebx].EDIT.line
@@ -1422,8 +1430,9 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 				.else
 					;Block
 					invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
-					or		eax,eax
-					jne		ErrBeep
+					.if eax!=0
+						jmp		ErrBeep
+					.endif
 					inc		nUndoid
 					mov		eax,[ebx].EDIT.blrg.clMin
 					.if eax==[ebx].EDIT.blrg.clMax
@@ -1457,8 +1466,9 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 			.elseif fShift && !fControl
 				;Shift+Delete, Cut
 				invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
-				or		eax,eax
-				jne		ErrBeep
+				.if eax!=0
+					jmp		ErrBeep
+				.endif
 				inc		nUndoid
 				invoke Cut,ebx,hWin
 				inc		nUndoid
@@ -1489,8 +1499,9 @@ EditFunc proc  uses ebx esi edi,hWin:HWND,uMsg:UINT,fAlt:DWORD,fShift:DWORD,fCon
 				mov		[ebx].EDIT.cpMin,eax
 				.if eax!=[ebx].EDIT.cpMax
 					invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
-					or		eax,eax
-					jne		ErrBeep
+					.if eax!=0
+						jmp		ErrBeep
+					.endif
 					inc		nUndoid
 					invoke DeleteSelection,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
 					mov		[ebx].EDIT.cpMin,eax
@@ -1630,16 +1641,18 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		.elseif edx==58h && fControl && !fShift && !fAlt
 			;Ctrl+X, Cut
 			invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
-			or		eax,eax
-			jne		ErrBeep
+			.if eax!=0
+				jmp		ErrBeep
+			.endif
 			inc		nUndoid
 			invoke Cut,ebx,hWin
 			inc		nUndoid
 		.elseif edx==56h && fControl && !fShift && !fAlt
 			;Ctrl+V, Paste
 			invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
-			or		eax,eax
-			jne		ErrBeep
+			.if eax!=0
+				jmp		ErrBeep
+			.endif
 			inc		nUndoid
 			invoke Paste,ebx,hWin,NULL
 			inc		nUndoid
@@ -1688,8 +1701,9 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 			mov		eax,wParam
 			.if (eax>=VK_SPACE || eax==VK_RETURN || eax==VK_TAB) && eax!=7Fh
 				invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
-				or		eax,eax
-				jne		ErrBeep
+				.if eax!=0
+					jmp		ErrBeep
+				.endif
 				mov		eax,[ebx].EDIT.cpMin
 				sub		eax,[ebx].EDIT.cpMax
 				push	eax
@@ -1720,7 +1734,9 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 				mov		[ebx].EDIT.cpMax,eax
 				pop		ecx
 				dec		ecx
-				jne		@b
+				.if ecx!=0
+					jmp @b
+				.endif
 				.if wParam==VK_RETURN && [ebx].EDIT.fIndent
 					invoke AutoIndent,ebx
 				.endif
@@ -1755,8 +1771,9 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 				mov		eax,[ebx].EDIT.cpMin
 				.if eax!=[ebx].EDIT.cpMax || eax
 					invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
-					or		eax,eax
-					jne		ErrBeep
+					.if eax!=0
+						jmp		ErrBeep
+					.endif
 					mov		eax,[ebx].EDIT.cpMin
 					.if eax!=[ebx].EDIT.cpMax
 						invoke DeleteSelection,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
@@ -1770,8 +1787,9 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 					.elseif eax
 						dec		eax
 						invoke IsSelectionLocked,ebx,eax,eax
-						or		eax,eax
-						jne		ErrBeep
+						.if eax!=0
+							jmp		ErrBeep
+						.endif
 						dec		[ebx].EDIT.cpMin
 						dec		[ebx].EDIT.cpMax
 						invoke GetChar,ebx,[ebx].EDIT.cpMin
@@ -1827,8 +1845,9 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 			mov		eax,wParam
 			.if (eax>=VK_SPACE || eax==VK_TAB) && eax!=7Fh
 				invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
-				or		eax,eax
-				jne		ErrBeep
+				.if eax!=0
+					jmp		ErrBeep
+				.endif
 				push	esi
 				inc		nUndoid
 				mov		eax,[ebx].EDIT.blrg.lnMin
@@ -1912,8 +1931,9 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 				invoke SelChange,ebx,SEL_TEXT
 			.elseif eax==08h
 				invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
-				or		eax,eax
-				jne		ErrBeep
+				.if eax!=0
+					jmp		ErrBeep
+				.endif
 				mov		eax,[ebx].EDIT.blrg.clMin
 				.if eax==[ebx].EDIT.blrg.clMax && eax
 					dec		[ebx].EDIT.blrg.clMin
@@ -2559,17 +2579,21 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 				mov		edx,eax
 				mov		eax,wParam
 				.if sdword ptr eax>0
-					sub		[esi].RAEDT.cpy,edx
-					jnb		@f
-					mov		[esi].RAEDT.cpy,0
-				  @@:
+					.if [esi].RAEDT.cpy>edx
+						sub		[esi].RAEDT.cpy,edx
+					.else
+						mov		[esi].RAEDT.cpy,0
+					.endif
 				.else
 					mov		eax,sinf.nMax
+					.if eax<sinf.nPage
+						jmp		@f
+					.endif
 					sub		eax,sinf.nPage
-					jb		@f
 					add		[esi].RAEDT.cpy,edx
-					cmp		eax,[esi].RAEDT.cpy
-					jg		@f
+					.if sdword ptr eax>[esi].RAEDT.cpy
+						jmp		@f
+					.endif
 					mov		[esi].RAEDT.cpy,eax
 				  @@:
 				.endif
@@ -2631,10 +2655,11 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 				xor		edx,edx
 				div		ecx
 				mul		ecx
-				sub		eax,ecx
-				jnb		@f
-				xor		eax,eax
-			  @@:
+				.if eax>ecx
+					sub		eax,ecx
+				.else
+					xor		eax,eax
+				.endif
 				mov		[esi].RAEDT.cpy,eax
 			.endif
 		.elseif eax==SB_PAGEDOWN
@@ -2647,10 +2672,11 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 			.endif
 		.elseif eax==SB_PAGEUP
 			mov		eax,sinf.nPage
-			sub		[esi].RAEDT.cpy,eax
-			jnb		@f
-			mov		[esi].RAEDT.cpy,0
-		  @@:
+			.if [esi].RAEDT.cpy>eax
+				sub		[esi].RAEDT.cpy,eax
+			.else
+				mov		[esi].RAEDT.cpy,0
+			.endif
 		.elseif eax==SB_TOP
 			mov		[esi].RAEDT.cpy,0
 		.elseif eax==SB_BOTTOM
@@ -2660,9 +2686,9 @@ RAEditProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		.endif
 		pop		edx
 		sub		edx,[esi].RAEDT.cpy
-		je		@f
-		invoke ScrollEdit,ebx,hWin,0,edx
-	  @@:
+		.if edx!=0
+			invoke ScrollEdit,ebx,hWin,0,edx
+		.endif
 		test	[ebx].EDIT.fstyle,STYLE_SCROLLTIP
 		.if !ZERO?
 			mov		eax,wParam
@@ -3022,8 +3048,9 @@ RAWndProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		;wParam=0
 		;lParam=0
 		invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
-		or		eax,eax
-		jne		ErrBeep
+		.if eax!=0
+			jmp		ErrBeep
+		.endif
 		inc		nUndoid
 		invoke Paste,ebx,[esi].RAEDT.hwnd,NULL
 		inc		nUndoid
@@ -3033,8 +3060,9 @@ RAWndProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 		;wParam=0
 		;lParam=0
 		invoke IsSelectionLocked,ebx,[ebx].EDIT.cpMin,[ebx].EDIT.cpMax
-		or		eax,eax
-		jne		ErrBeep
+		.if eax!=0
+			jmp		ErrBeep
+		.endif
 		inc		nUndoid
 		test	[ebx].EDIT.nMode,MODE_BLOCK
 		.if ZERO?
@@ -3462,11 +3490,13 @@ RAWndProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 			.if eax!=STYLE_NOSPLITT or STYLE_NOVSCROLL
 				sub		ecx,SBWT
 				invoke MoveWindow,[ebx].EDIT.hhscroll,edi,[ebx].EDIT.rc.bottom,ecx,SBWT,TRUE
-				test	[ebx].EDIT.fstyle,STYLE_NOSIZEGRIP
-				jne		@f
+				.if [ebx].EDIT.fstyle&STYLE_NOSIZEGRIP
+					jmp		@f
+				.endif
 				invoke GetWindowLong,[ebx].EDIT.hpar,GWL_STYLE
-				test	eax,WS_MAXIMIZE
-				jne		@f
+				.if eax&WS_MAXIMIZE
+					jmp		@f
+				.endif
 				invoke GetClientRect,[ebx].EDIT.hpar,addr rect
 				invoke ClientToScreen,[ebx].EDIT.hpar,addr rect.right
 				mov		eax,[ebx].EDIT.rc.bottom
@@ -3515,19 +3545,21 @@ RAWndProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 			mov		[ebx].EDIT.cpx,eax
 		.elseif eax==SB_LINELEFT
 			mov		eax,[ebx].EDIT.fntinfo.fntwt
-			sub		[ebx].EDIT.cpx,eax
-			jnb		@f
-			mov		[ebx].EDIT.cpx,0
-		  @@:
+			.if [ebx].EDIT.cpx>eax
+				sub		[ebx].EDIT.cpx,eax
+			.else
+				mov		[ebx].EDIT.cpx,0
+			.endif
 		.elseif eax==SB_LINERIGHT
 			mov		eax,[ebx].EDIT.fntinfo.fntwt
 			add		[ebx].EDIT.cpx,eax
 		.elseif eax==SB_PAGELEFT
 			mov		eax,sinf.nPage
-			sub		[ebx].EDIT.cpx,eax
-			jnb		@f
-			mov		[ebx].EDIT.cpx,0
-		  @@:
+			.if [ebx].EDIT.cpx > eax
+				sub		[ebx].EDIT.cpx,eax
+			.else
+				mov		[ebx].EDIT.cpx,0
+			.endif
 		.elseif eax==SB_PAGERIGHT
 			mov		eax,sinf.nPage
 			add		[ebx].EDIT.cpx,eax
