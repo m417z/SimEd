@@ -3021,7 +3021,7 @@ RAWndProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 				div		ecx
 				push	eax
 			.else
-				push	0
+				push	0 ; stack_temp_used -2
 				push	0
 			.endif
 			mov		eax,wParam
@@ -4448,15 +4448,15 @@ _REM_BASE \
 .code
 align 4
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; END OF: RAEdit_REM_Msg_JumpTable.asm
 	.endif
 	.if eax>=EM_CANPASTE && eax<=EM_SETZOOM
 		sub		eax,EM_CANPASTE
-		.if eax<=35
-			jmp		DWORD PTR [offset _RICHEDIT_MSG+eax*4]
-		.else
+		.if eax>35
 			invoke DefWindowProc,hWin,uMsg,wParam,lParam
 			ret
 		.endif
+		jmp		DWORD PTR [offset _RICHEDIT_MSG+eax*4]
 		; RAEdit_Richedit_Msg_JumpTable.asm
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		align 4 
@@ -4669,7 +4669,7 @@ align 4
 				invoke SelectObject,[edi].FORMATRANGE.hdcTarget,eax
 				push	eax
 				;Get tab width
-				mov		eax,'WWWW'
+				mov		eax,57575757h ; 'WWWW'
 				mov		pt.x,eax
 				invoke GetTextExtentPoint32,[edi].FORMATRANGE.hdcTarget,addr pt.x,4,addr pt
 				mov		eax,pt.x
@@ -4768,6 +4768,7 @@ _RICHEDIT_MSG \
 .code
 align 4
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; END OF: RAEdit_Richedit_Msg_JumpTable.asm
 	.endif
 	.if eax>=EM_GETSEL && eax<=EM_GETIMESTATUS
 		sub		eax,EM_GETSEL
@@ -5120,6 +5121,7 @@ _EDIT_MSG \
 .code
 align 4
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; END OF: RAEdit_Edit_Msg_JumpTable.asm
 	.endif
 	.if eax==WM_COPY
 		;wParam=0
