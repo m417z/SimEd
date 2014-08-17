@@ -1,9 +1,9 @@
 
 .code
 
-SetClipData proc lpData:LPSTR,dwSize:dword
+SetClipData proc lpData:LPSTR,dwSize:DWORD
 	LOCAL	hMem:HANDLE
-	LOCAL	pMem:dword
+	LOCAL	pMem:DWORD
 
 	mov		eax,dwSize
 	shr		eax,3

@@ -61,9 +61,10 @@ ExpandLineMem proc uses ebx esi edi,hMem:DWORD
 
 ExpandLineMem endp
 
-GarbageCollection proc lpLine:DWORD,lpSrc:DWORD,lpDst:DWORD
+GarbageCollection proc uses ebx esi edi,lpEdit:DWORD,lpLine:DWORD,lpSrc:DWORD,lpDst:DWORD
 
 	mov		eax,lpLine
+	mov		ebx,lpEdit
 	mov		ecx,[ebx].EDIT.rpLineFree
 	add		lpLine,ecx
 	mov		edi,lpDst
@@ -95,7 +96,7 @@ GarbageCollection proc lpLine:DWORD,lpSrc:DWORD,lpDst:DWORD
 
 GarbageCollection endp
 
-ExpandCharMem proc uses ebx,hMem:DWORD,nLen:DWORD
+ExpandCharMem proc uses ebx esi edi,hMem:DWORD,nLen:DWORD
 
 	mov		ebx,hMem
 	mov		eax,nLen
@@ -105,8 +106,6 @@ ExpandCharMem proc uses ebx,hMem:DWORD,nLen:DWORD
 	add		eax,[ebx].EDIT.rpCharsFree
 	add		eax,MAXCHARMEM
 	.if eax>[ebx].EDIT.cbChars
-		push	esi
-		push	edi
 		mov		esi,[ebx].EDIT.hChars
 		mov		edi,[ebx].EDIT.cbChars
 		mov		eax,nLen
@@ -122,19 +121,15 @@ ExpandCharMem proc uses ebx,hMem:DWORD,nLen:DWORD
 			xor		eax,eax
 		.else
 			mov		[ebx].EDIT.hChars,eax
-			push	esi
-			invoke GarbageCollection,[ebx].EDIT.hLine,esi,[ebx].EDIT.hChars
-			pop		esi
+			invoke GarbageCollection,ebx,[ebx].EDIT.hLine,esi,[ebx].EDIT.hChars
 			invoke HeapFree,[ebx].EDIT.hHeap,0,esi
 		.endif
-		pop		edi
-		pop		esi
 	.endif
 	ret
 
 ExpandCharMem endp
 
-ExpandUndoMem proc uses ebx,hMem:DWORD,cb:DWORD
+ExpandUndoMem proc uses ebx esi edi,hMem:DWORD,cb:DWORD
 
 	mov		ebx,hMem
 	mov		eax,[ebx].EDIT.rpUndo
@@ -144,8 +139,6 @@ ExpandUndoMem proc uses ebx,hMem:DWORD,cb:DWORD
 	inc		eax
 	shl		eax,12
 	.if eax>[ebx].EDIT.cbUndo
-		push	esi
-		push	edi
 		mov		esi,[ebx].EDIT.hUndo
 		mov		edi,[ebx].EDIT.cbUndo
 		add		eax,MAXUNDOMEM
@@ -166,8 +159,6 @@ ExpandUndoMem proc uses ebx,hMem:DWORD,cb:DWORD
 			pop		esi
 			invoke HeapFree,[ebx].EDIT.hHeap,0,esi
 		.endif
-		pop		edi
-		pop		esi
 	.endif
 	ret
 

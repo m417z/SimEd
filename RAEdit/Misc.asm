@@ -305,12 +305,11 @@ IsCharLeadByte proc uses ebx,hMem:DWORD,cp:DWORD
 
 IsCharLeadByte endp
 
-GetTextWidth proc uses ebx,hMem:DWORD,hDC:HDC,lpText:DWORD,nChars:DWORD,lpRect:DWORD
+GetTextWidth proc uses ebx esi,hMem:DWORD,hDC:HDC,lpText:DWORD,nChars:DWORD,lpRect:DWORD
 	LOCAL	dtp:DRAWTEXTPARAMS
 
 	mov		ebx,hMem
 	.if [ebx].EDIT.fntinfo.monospace
-		push	esi
 		mov		eax,[ebx].EDIT.fntinfo.fntht
 		mov		esi,lpRect
 		add		eax,[esi].RECT.top
@@ -333,7 +332,6 @@ GetTextWidth proc uses ebx,hMem:DWORD,hDC:HDC,lpText:DWORD,nChars:DWORD,lpRect:D
 		mov		esi,lpRect
 		add		eax,[esi].RECT.left
 		mov		[esi].RECT.right,eax
-		pop		esi
 	.else
 		mov		dtp.cbSize,sizeof dtp
 		mov		eax,[ebx].EDIT.nTab

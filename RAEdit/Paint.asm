@@ -815,7 +815,7 @@ NestedProc_SetCaseWord:
 	push	ecx
 	push	ebx
 	push	esi
-	lea		ebx,[ebx+edx+SIZEOF WORDINFO]
+	lea		ebx,[ebx+edx+sizeof WORDINFO]
 	lea		esi,[esi+edi]
   @@:
 	mov		al,[ebx+ecx-1]
@@ -1051,6 +1051,8 @@ SetBlockMarkers proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,nMax:DWORD
 	ret
 
 NestedProc_BlockRoot:
+
+BlockRootStart:
 	mov		nLnSt,0
 	mov		nLnEn,0
 	invoke NextBookMark,ebx,esi,1
@@ -1075,7 +1077,7 @@ NestedProc_BlockRoot:
 				.if [edx].RABLOCKDEF.flag&BD_SEGMENTBLOCK
 					dec		esi
 				.endif
-				jmp		NestedProc_BlockRoot
+				jmp		BlockRootStart
 			.endif
 		.endif
 	.endif

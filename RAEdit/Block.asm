@@ -160,14 +160,14 @@ NestedProc_TestBlock:
 		.endif
 		invoke IsLine,ebx,edi,esi
 		.if eax!=-1
-			.if dword ptr nNest==0
+			.if nNest==0
 				.break
 			.endif
 			dec		nNest
 			.if nNest==0
 				.break
 			.endif
-			.if dword ptr nNest==1
+			.if nNest==1
 				.break
 			.endif
 		.endif
