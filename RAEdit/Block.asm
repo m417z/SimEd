@@ -1285,7 +1285,7 @@ TestWrd1:
 		jmp		@b
 	.endif
 	pop		edx
-	pop		ecx
+	pop		ecx ; stack_temp_used +2
 	retn
   @@:
 	pop		edx
