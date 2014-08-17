@@ -371,11 +371,13 @@ FindTextEx endp
 IsLine proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,lpszTest:DWORD
 	LOCAL	tmpesi:DWORD
 	LOCAL	fCmnt:DWORD
-	LOCAL	espsave:DWORD
+	;LOCAL	espsave:DWORD
+	LOCAL	notfound:DWORD
 
-	mov		eax,esp
-	sub		eax,4
-	mov		espsave,eax
+	;mov		eax,esp
+	;sub		eax,4
+	;mov		espsave,eax
+	mov		notfound,0
 	mov		ebx,hMem
 	mov		edi,nLine
 	shl		edi,2
@@ -385,6 +387,9 @@ IsLine proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,lpszTest:DWORD
 		mov		edi,nLine
 		shl		edi,2
 		call	NestedProc_TestLine
+			.if notfound!=0
+				.break
+			.endif
 	.endif
 	ret
 
@@ -403,6 +408,9 @@ NestedProc_TestLine:
 		.endif
 	.else
 		call	NestedProc_SkipSpc
+		.if notfound!=0
+			jmp		Nf
+		.endif
 		.if eax!=0
 			jmp		Nf
 		.endif
@@ -412,6 +420,9 @@ NestedProc_TestLine:
 	.if ah
 		.if ax==' $'
 			call	NestedProc_SkipCmnt
+			.if notfound!=0
+				jmp		Nf
+			.endif
 			inc		esi
 			call	NestedProc_SkipWord
 			.if eax!=0
@@ -421,16 +432,28 @@ NestedProc_TestLine:
 			.if al==' '
 				inc		esi
 				call	NestedProc_SkipSpc
+				.if notfound!=0
+					jmp		Nf
+				.endif
 				call	NestedProc_SkipCmnt
+				.if notfound!=0
+					jmp		Nf
+				.endif
 				.if eax!=0
 					jmp		Nf
 				.endif
 			.endif
 		.elseif ax==' ?'
 			call	NestedProc_SkipCmnt
+			.if notfound!=0
+				jmp		Nf
+			.endif
 			add		esi,2
 			push	esi
 			call	NestedProc_TestWord
+			.if notfound!=0
+				jmp		Nf
+			.endif
 			pop		esi
 			.if eax==0
 				jmp		Found
@@ -444,13 +467,22 @@ NestedProc_TestLine:
 			.if al==' '
 				inc		esi
 				call	NestedProc_SkipSpc
+				.if notfound!=0
+					jmp		Nf
+				.endif
 				call	NestedProc_SkipCmnt
+				.if notfound!=0
+					jmp		Nf
+				.endif
 				.if eax!=0
 					jmp		Nf
 				.endif
 			.endif
 		.elseif al=='%'
 			call	NestedProc_SkipCmnt
+			.if notfound!=0
+				jmp		Nf
+			.endif
 			inc		esi
 			call	NestedProc_OptSkipWord
 			jmp		Nxt
@@ -540,13 +572,22 @@ NestedProc_TestLine:
 			jmp		Nf
 		.endif
 		call	NestedProc_SkipCmnt
+		.if notfound!=0
+			jmp		Nf
+		.endif
 		call	NestedProc_TestWord
+		.if notfound!=0
+			jmp		Nf
+		.endif
 		.if eax!=0
 			jmp		Nf
 		.endif
 		xor		edx,edx
 	.else
 		call	NestedProc_SkipCmnt
+		.if notfound!=0
+			jmp		Nf
+		.endif
 		.while ecx<[edi].CHARS.len
 			xor		edx,edx
 			.if al==[edi+ecx+sizeof CHARS]
@@ -642,13 +683,13 @@ SkipSpcStart:
 		.endif
 		xor		eax,eax
 	.else
-		xor		eax,eax
-		dec		eax
+		mov		eax,-1
 	.endif
 	retn
 SkipSpcNf:
-	mov		esp,espsave
-	jmp		Nf
+	;mov		esp,espsave
+	mov notfound,1
+	retn
 
 NestedProc_OptSkipWord:
 	push	ecx
@@ -726,7 +767,13 @@ TestWordStart:
 		mov		ax,[edi+ecx+sizeof CHARS]
 		.if al==' ' || al==VK_TAB
 			call	NestedProc_SkipSpc
+			.if notfound!=0
+				jmp		TestWordNf
+			.endif
 			call	NestedProc_SkipCmnt
+			.if notfound!=0
+				jmp		TestWordNf
+			.endif
 			dec		ecx
 			jmp		@b
 		.elseif al=='('
@@ -755,6 +802,9 @@ TestWordStart:
 		.while ecx<[edi].CHARS.len
 			push	esi
 			call	NestedProc_TestWord
+			.if notfound!=0
+				jmp		TestWordNf
+			.endif
 			.if !eax
 				pop		eax ; stack_temp_used +1
 				xor		eax,eax
@@ -768,11 +818,26 @@ TestWordStart:
 		.while ecx<[edi].CHARS.len
 			push	esi
 			call	NestedProc_SkipSpc
+			.if notfound!=0
+				jmp		TestWordNf
+			.endif
 			call	NestedProc_SkipCmnt
+			.if notfound!=0
+				jmp		TestWordNf
+			.endif
 			call	NestedProc_TestWord
+			.if notfound!=0
+				jmp		TestWordNf
+			.endif
 			.if !eax
 				call	NestedProc_SkipSpc
+				.if notfound!=0
+					jmp		TestWordNf
+				.endif
 				call	NestedProc_SkipCmnt
+				.if notfound!=0
+					jmp		TestWordNf
+				.endif
 				pop		eax ; stack_temp_used +1
 				mov		al,[edi+ecx+sizeof CHARS]
 				.if al==VK_RETURN || ecx==[edi].CHARS.len
@@ -813,7 +878,13 @@ TestWordStart:
 			.endif
 		.endif
 		call	NestedProc_SkipSpc
+		.if notfound!=0
+			jmp		TestWordNf
+		.endif
 		call	NestedProc_SkipCmnt
+		.if notfound!=0
+			jmp		TestWordNf
+		.endif
 		.if ecx==[edi].CHARS.len
 			xor		eax,eax
 			retn
@@ -824,6 +895,9 @@ TestWordStart:
 		.while TRUE
 			push	ecx
 			call	NestedProc_TestWord
+			.if notfound!=0
+				jmp		TestWordNf
+			.endif
 			pop		edx
 			inc		eax
 		  .if eax
@@ -836,7 +910,13 @@ TestWordStart:
 				inc		ecx
 			.endif
 			call	NestedProc_SkipSpc
+			.if notfound!=0
+				jmp		TestWordNf
+			.endif
 			call	NestedProc_SkipCmnt
+			.if notfound!=0
+				jmp		TestWordNf
+			.endif
 			xor		eax,eax
 		  .if ecx>=[edi].CHARS.len
 		  	.break
@@ -846,7 +926,13 @@ TestWordStart:
 	.elseif ax==' $'
 		call	NestedProc_SkipWord
 		call	NestedProc_SkipSpc
+		.if notfound!=0
+			jmp		TestWordNf
+		.endif
 		call	NestedProc_SkipCmnt
+		.if notfound!=0
+			jmp		TestWordNf
+		.endif
 		inc		esi
 		inc		esi
 		jmp		TestWordStart
@@ -894,6 +980,8 @@ TestWordStart:
 			dec		eax
 		.endif
 	.endif
+
+TestWordNf:
 	retn
 
 IsLine endp

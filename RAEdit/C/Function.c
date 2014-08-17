@@ -472,8 +472,9 @@ REG_T IsLine(DWORD hMem, DWORD nLine, DWORD lpszTest)
 	REG_T temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
 	DWORD tmpesi;
 	DWORD fCmnt;
-	DWORD espsave;
+	// LOCAL	espsave:DWORD
 	DWORD esisave;
+	DWORD notfound;
 
 	auto void TestLine(void);
 	auto void SkipString(void);
@@ -483,9 +484,10 @@ REG_T IsLine(DWORD hMem, DWORD nLine, DWORD lpszTest)
 	auto void SkipWord(void);
 	auto void TestWord(void);
 
-	eax = esp;
-	eax -= 4;
-	espsave = eax;
+	// mov		eax,esp
+	// sub		eax,4
+	// mov		espsave,eax
+	notfound = 0;
 	ebx = hMem;
 	edi = nLine;
 	edi *= 4;
@@ -498,6 +500,10 @@ REG_T IsLine(DWORD hMem, DWORD nLine, DWORD lpszTest)
 			edi = nLine;
 			edi *= 4;
 			TestLine();
+			if(notfound!=0)
+			{
+				break;
+			} // endif
 			if(eax!=-1)
 			{
 				break;
@@ -537,6 +543,10 @@ REG_T IsLine(DWORD hMem, DWORD nLine, DWORD lpszTest)
 		else
 		{
 			SkipSpc();
+			if(notfound!=0)
+			{
+				goto Nf;
+			} // endif
 			if(eax!=0)
 			{
 				goto Nf;
@@ -549,6 +559,10 @@ Nxt:
 			if(RWORD(eax)==' $')
 			{
 				SkipCmnt();
+				if(notfound!=0)
+				{
+					goto Nf;
+				} // endif
 				esi++;
 				SkipWord();
 				if(eax!=0)
@@ -560,7 +574,15 @@ Nxt:
 				{
 					esi++;
 					SkipSpc();
+					if(notfound!=0)
+					{
+						goto Nf;
+					} // endif
 					SkipCmnt();
+					if(notfound!=0)
+					{
+						goto Nf;
+					} // endif
 					if(eax!=0)
 					{
 						goto Nf;
@@ -570,9 +592,17 @@ Nxt:
 			else if(RWORD(eax)==' ?')
 			{
 				SkipCmnt();
+				if(notfound!=0)
+				{
+					goto Nf;
+				} // endif
 				esi += 2;
 				temp1 = esi;
 				TestWord();
+				if(notfound!=0)
+				{
+					goto Nf;
+				} // endif
 				esi = temp1;
 				if(eax==0)
 				{
@@ -589,7 +619,15 @@ Nxt:
 				{
 					esi++;
 					SkipSpc();
+					if(notfound!=0)
+					{
+						goto Nf;
+					} // endif
 					SkipCmnt();
+					if(notfound!=0)
+					{
+						goto Nf;
+					} // endif
 					if(eax!=0)
 					{
 						goto Nf;
@@ -599,6 +637,10 @@ Nxt:
 			else if(RBYTE_LOW(eax)=='%')
 			{
 				SkipCmnt();
+				if(notfound!=0)
+				{
+					goto Nf;
+				} // endif
 				esi++;
 				OptSkipWord();
 				goto Nxt;
@@ -727,7 +769,15 @@ Nxt:
 				goto Nf;
 			} // endif
 			SkipCmnt();
+			if(notfound!=0)
+			{
+				goto Nf;
+			} // endif
 			TestWord();
+			if(notfound!=0)
+			{
+				goto Nf;
+			} // endif
 			if(eax!=0)
 			{
 				goto Nf;
@@ -737,6 +787,10 @@ Nxt:
 		else
 		{
 			SkipCmnt();
+			if(notfound!=0)
+			{
+				goto Nf;
+			} // endif
 			while(ecx<((CHARS *)edi)->len)
 			{
 				edx = 0;
@@ -872,13 +926,13 @@ SkipSpcStart:
 		}
 		else
 		{
-			eax = 0;
-			eax--;
+			eax = -1;
 		} // endif
 		return;
 SkipSpcNf:
-		esp = espsave;
-		goto Nf;
+		// mov		esp,espsave
+		notfound = 1;
+		return;
 
 	}
 
@@ -986,7 +1040,15 @@ TestWordStart:
 			if(RBYTE_LOW(eax)==' ' || RBYTE_LOW(eax)==VK_TAB)
 			{
 				SkipSpc();
+				if(notfound!=0)
+				{
+					goto TestWordNf;
+				} // endif
 				SkipCmnt();
+				if(notfound!=0)
+				{
+					goto TestWordNf;
+				} // endif
 				ecx--;
 				goto anon_1;
 			}
@@ -1027,6 +1089,10 @@ TestWordStart:
 			{
 				temp1 = esi;
 				TestWord();
+				if(notfound!=0)
+				{
+					goto TestWordNf;
+				} // endif
 				if(!eax)
 				{
 					eax = temp1;
@@ -1044,12 +1110,32 @@ TestWordStart:
 			{
 				temp1 = esi;
 				SkipSpc();
+				if(notfound!=0)
+				{
+					goto TestWordNf;
+				} // endif
 				SkipCmnt();
+				if(notfound!=0)
+				{
+					goto TestWordNf;
+				} // endif
 				TestWord();
+				if(notfound!=0)
+				{
+					goto TestWordNf;
+				} // endif
 				if(!eax)
 				{
 					SkipSpc();
+					if(notfound!=0)
+					{
+						goto TestWordNf;
+					} // endif
 					SkipCmnt();
+					if(notfound!=0)
+					{
+						goto TestWordNf;
+					} // endif
 					eax = temp1;
 					RBYTE_LOW(eax) = *(BYTE *)(edi+ecx+sizeof(CHARS));
 					if(RBYTE_LOW(eax)==VK_RETURN || ecx==((CHARS *)edi)->len)
@@ -1103,7 +1189,15 @@ TestWordStart:
 				} // endif
 			} // endif
 			SkipSpc();
+			if(notfound!=0)
+			{
+				goto TestWordNf;
+			} // endif
 			SkipCmnt();
+			if(notfound!=0)
+			{
+				goto TestWordNf;
+			} // endif
 			if(ecx==((CHARS *)edi)->len)
 			{
 				eax = 0;
@@ -1116,6 +1210,10 @@ TestWordStart:
 			{
 				temp1 = ecx;
 				TestWord();
+				if(notfound!=0)
+				{
+					goto TestWordNf;
+				} // endif
 				edx = temp1;
 				eax++;
 				if(eax)
@@ -1130,7 +1228,15 @@ TestWordStart:
 					ecx++;
 				} // endif
 				SkipSpc();
+				if(notfound!=0)
+				{
+					goto TestWordNf;
+				} // endif
 				SkipCmnt();
+				if(notfound!=0)
+				{
+					goto TestWordNf;
+				} // endif
 				eax = 0;
 				if(ecx>=((CHARS *)edi)->len)
 				{
@@ -1143,7 +1249,15 @@ TestWordStart:
 		{
 			SkipWord();
 			SkipSpc();
+			if(notfound!=0)
+			{
+				goto TestWordNf;
+			} // endif
 			SkipCmnt();
+			if(notfound!=0)
+			{
+				goto TestWordNf;
+			} // endif
 			esi++;
 			esi++;
 			goto TestWordStart;
@@ -1204,6 +1318,8 @@ anon_2:
 				eax--;
 			} // endif
 		} // endif
+
+TestWordNf:
 		return;
 
 	}
