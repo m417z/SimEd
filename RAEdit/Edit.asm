@@ -22,7 +22,7 @@ InsertNewLine proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,nSize:DWORD
 		sub		esi,sizeof LINE
 		shr		ecx,2
 		std
-		rep movsd
+		rep movsd ; reverse
 		cld
 		pop		esi
 	.endif
@@ -174,15 +174,11 @@ InsertChar proc uses ebx esi edi,hMem:DWORD,cp:DWORD,nChr:DWORD
 	add		esi,[ebx].EDIT.hChars
 	mov		ecx,[esi].CHARS.state
 	.if ecx&STATE_HIDDEN
-		pushad
 		invoke TestExpand,ebx,[ebx].EDIT.line
-		popad
 	.else
 		and		ecx,STATE_BMMASK
 		.if (ecx==STATE_BM2 || ecx==STATE_BM8) && nChr==VK_RETURN
-			pushad
 			invoke Expand,ebx,[ebx].EDIT.line
-			popad
 		.endif
 	.endif
 	mov		ecx,nChr
@@ -215,7 +211,7 @@ InsertChar proc uses ebx esi edi,hMem:DWORD,cp:DWORD,nChr:DWORD
 		lea		esi,[esi+edi]
 		lea		edi,[esi+1]
 		std
-		rep movsb
+		rep movsb ; reverse
 		cld
 	.endif
 	pop		edi
@@ -231,9 +227,9 @@ InsertChar proc uses ebx esi edi,hMem:DWORD,cp:DWORD,nChr:DWORD
 		mov		ecx,[esi].CHARS.state
 		and		ecx,STATE_BMMASK
 		.if ecx==STATE_BM2 || ecx==STATE_BM8
-			pushad
+			push eax
 			invoke TestExpand,ebx,eax
-			popad
+			pop eax
 		.endif
 		; Save line number
 		push	eax
@@ -280,9 +276,9 @@ InsertChar proc uses ebx esi edi,hMem:DWORD,cp:DWORD,nChr:DWORD
   Ex:
 	.if ![ebx].EDIT.fChanged
 		mov		[ebx].EDIT.fChanged,TRUE
-		pushad
+		push eax
 		invoke InvalidateRect,[ebx].EDIT.hsta,NULL,TRUE
-		popad
+		pop eax
 	.endif
 	inc		[ebx].EDIT.nchange
 	ret

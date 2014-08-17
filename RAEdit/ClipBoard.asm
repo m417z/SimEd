@@ -11,12 +11,12 @@ SetClipData proc lpData:LPSTR,dwSize:dword
 	shl		eax,3
 	invoke xGlobalAlloc, GHND or GMEM_DDESHARE, eax
 	.if eax==0
-		jmp		@exit2
+		jmp		exit2
 	.endif
 	mov		hMem,eax
 	invoke GlobalLock,eax	;hGlob
 	.if eax==0
-		jmp		@exit1
+		jmp		exit1
 	.endif
 	mov		pMem,eax
 	invoke RtlMoveMemory,eax,lpData,dwSize
@@ -30,14 +30,14 @@ SetClipData proc lpData:LPSTR,dwSize:dword
 		invoke SetClipboardData,CF_TEXT,hMem
 		invoke CloseClipboard
 		xor		eax,eax		;0 - Ok
-		jmp		@exit3
+		jmp		exit3
 	.endif
-  @exit1:
+  exit1:
 	invoke  GlobalFree, hMem
 	xor     eax, eax
-  @exit2:
+  exit2:
 	dec     eax          ; -1 - error
-  @exit3:
+  exit3:
 	ret
 
 SetClipData endp

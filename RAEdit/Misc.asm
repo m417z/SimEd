@@ -214,16 +214,16 @@ align 4
 	add	eax, 4
 	movzx	edx,word ptr [eax]
 	.if dl==0
-		jmp	@lb1
+		jmp	lb1
 	.endif
 	
 	.if dh==0
-		jmp	@lb2
+		jmp	lb2
 	.endif
 	
 	movzx	edx,word ptr [eax+2]
 	.if dl==0
-		jmp	@lb3
+		jmp	lb3
 	.endif
 	
 	.if dh!=0
@@ -234,17 +234,17 @@ align 4
 	add	eax,3
 	ret
 
-@lb3:
+lb3:
 	sub	eax,lpSource
 	add	eax,2
 	ret
 
-@lb2:
+lb2:
 	sub	eax,lpSource
 	add	eax,1
 	ret
 
-@lb1:
+lb1:
 	sub	eax,lpSource
 	ret
 

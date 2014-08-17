@@ -27,7 +27,7 @@ GetTopFromYp proc uses ebx esi edi,hMem:DWORD,hWin:DWORD,yp:DWORD
 		sub		eax,[edx].RAEDT.topyp
 		xor		edx,edx
 		div		edi
-		pop		edi
+		pop		edi ; stack_temp_used +1
 		mov		cp,0
 		.if eax
 			mov		edx,[esi+ecx*sizeof LINE].LINE.rpChars
@@ -160,7 +160,7 @@ GetCharPtr proc uses ebx esi edi,hMem:DWORD,cp:DWORD
 		add		eax,ecx
 		push	eax
 	.else
-		push	ecx
+		push	ecx ; stack_temp_used -1
 		sub		ecx,[edi].CHARS.len
 		mov		[ebx].EDIT.cpLine,ecx
 		mov		ecx,[edi].CHARS.len
