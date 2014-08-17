@@ -57,7 +57,7 @@ REG_T ExpandLineMem(DWORD hMem)
 		if(!eax)
 		{
 			((EDIT *)ebx)->cbLine = edi;
-			eax = MessageBox(((EDIT *)ebx)->hwnd, &szMemFailLine, &szToolTip, MB_OK);
+			eax = MessageBox(((EDIT *)ebx)->hwnd, szMemFailLine, szToolTip, MB_OK);
 			eax = 0;
 		}
 		else
@@ -159,7 +159,7 @@ REG_T ExpandCharMem(DWORD hMem, DWORD nLen)
 		if(!eax)
 		{
 			((EDIT *)ebx)->cbChars = edi;
-			eax = MessageBox(((EDIT *)ebx)->hwnd, &szMemFailChar, &szToolTip, MB_OK);
+			eax = MessageBox(((EDIT *)ebx)->hwnd, szMemFailChar, szToolTip, MB_OK);
 			eax = 0;
 		}
 		else
@@ -196,7 +196,7 @@ REG_T ExpandUndoMem(DWORD hMem, DWORD cb)
 		if(!eax)
 		{
 			((EDIT *)ebx)->cbUndo = edi;
-			eax = MessageBox(((EDIT *)ebx)->hwnd, &szMemFailUndo, &szToolTip, MB_OK);
+			eax = MessageBox(((EDIT *)ebx)->hwnd, szMemFailUndo, szToolTip, MB_OK);
 			eax = 0;
 		}
 		else
@@ -236,7 +236,7 @@ REG_T ExpandWordMem(void)
 		eax = HeapAlloc(eax, HEAP_ZERO_MEMORY, cbWrdMem);
 		if(!eax)
 		{
-			eax = MessageBox(NULL, &szMemFailSyntax, &szToolTip, MB_OK);
+			eax = MessageBox(NULL, szMemFailSyntax, szToolTip, MB_OK);
 			eax = 0;
 		}
 		else

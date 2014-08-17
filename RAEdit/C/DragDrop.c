@@ -22,10 +22,10 @@ REG_T IDropTarget_QueryInterface(REG_T pthis, REG_T iid, REG_T ppvObject)
 	REG_T temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
 
 	// PrintText 'IDropTarget_QueryInterface'
-	eax = IsEqualGUID(iid, &IID_IDropTarget);
+	eax = IsEqualGUID(iid, IID_IDropTarget);
 	if(!eax)
 	{
-		eax = IsEqualGUID(iid, &IID_IUnknown);
+		eax = IsEqualGUID(iid, IID_IUnknown);
 	} // endif
 	edx = ppvObject;
 	if(eax)
@@ -350,10 +350,10 @@ REG_T IDropSource_QueryInterface(REG_T pthis, REG_T iid, REG_T ppvObject)
 	REG_T temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
 
 	// PrintText 'IDropSource_QueryInterface'
-	eax = IsEqualGUID(iid, &IID_IDropSource);
+	eax = IsEqualGUID(iid, IID_IDropSource);
 	if(!eax)
 	{
-		eax = IsEqualGUID(iid, &IID_IUnknown);
+		eax = IsEqualGUID(iid, IID_IUnknown);
 	} // endif
 	edx = ppvObject;
 	if(eax)
@@ -444,10 +444,10 @@ REG_T IDO_QueryInterface(REG_T pthis, REG_T iid, REG_T ppvObject)
 	REG_T temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
 
 	// PrintText 'IDataObject_QueryInterface'
-	eax = IsEqualGUID(iid, &IID_IDataObject);
+	eax = IsEqualGUID(iid, IID_IDataObject);
 	if(!eax)
 	{
-		eax = IsEqualGUID(iid, &IID_IUnknown);
+		eax = IsEqualGUID(iid, IID_IUnknown);
 	} // endif
 	edx = ppvObject;
 	if(eax)
@@ -650,7 +650,7 @@ REG_T IDO_EnumFormatEtc(REG_T pthis, REG_T dwDirection, REG_T ppenumFormatetc)
 	// PrintText 'IDataObject_EnumFormatEtc'
 	if(dwDirection==DATADIR_GET)
 	{
-		eax = &pIEnumFORMATETC;
+		eax = pIEnumFORMATETC;
 		edx = ppenumFormatetc;
 		*(DWORD *)edx = eax;
 		eax = S_OK;
@@ -703,10 +703,10 @@ REG_T IEnumFORMATETC_QueryInterface(REG_T pthis, REG_T iid, REG_T ppvObject)
 	REG_T temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
 
 	// PrintText 'IEnumFORMATETC_QueryInterface'
-	eax = IsEqualGUID(iid, &IID_IEnumFORMATETC);
+	eax = IsEqualGUID(iid, IID_IEnumFORMATETC);
 	if(!eax)
 	{
-		eax = IsEqualGUID(iid, &IID_IUnknown);
+		eax = IsEqualGUID(iid, IID_IUnknown);
 	} // endif
 	edx = ppvObject;
 	if(eax)

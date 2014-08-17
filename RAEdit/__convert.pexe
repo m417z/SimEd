@@ -476,7 +476,15 @@ EOF;
 	
 	$p = <<<'EOF'
 @
-		\b(?:addr|offset)\s+(\w+)\b
+		\boffset\b\s+
+@x
+EOF;
+	$r = '';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		\b(?:addr)\s+(\w+)\b
 @x
 EOF;
 	$r = '&$1';
@@ -484,7 +492,7 @@ EOF;
 	
 	$p = <<<'EOF'
 @
-		\b(?:addr|offset)\s+\[(.*?)\]
+		\b(?:addr)\s+\[(.*?)\]
 @x
 EOF;
 	$r = '$1';

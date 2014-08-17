@@ -40,7 +40,7 @@ REG_T GetDef(DWORD nInx)
 		eax = LoadBitmap(hInstance, IDB_RAEDITBUTTON);
 		ccdef.hbmp = eax;
 		// Return pointer to inited struct
-		eax = &ccdef;
+		eax = ccdef;
 	}
 	else
 	{
@@ -62,7 +62,7 @@ REG_T GetDefEx(DWORD nInx)
 		eax = LoadBitmap(hInstance, IDB_RAEDITBUTTON);
 		ccdefex.hbmp = eax;
 		// Return pointer to inited struct
-		eax = &ccdefex;
+		eax = ccdefex;
 	}
 	else
 	{

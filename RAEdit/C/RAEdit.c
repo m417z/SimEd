@@ -37,14 +37,14 @@ REG_T InstallRAEdit(HINSTANCE hInst, DWORD fGlobal)
 	{
 		wc.style = CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS;
 	} // endif
-	wc.lpfnWndProc = &RAWndProc;
+	wc.lpfnWndProc = RAWndProc;
 	wc.cbClsExtra = NULL;
 	wc.cbWndExtra = 4; // Holds memory handle
 	temp1 = hInst;
 	wc.hInstance = temp1;
 	wc.hbrBackground = NULL;
 	wc.lpszMenuName = NULL;
-	wc.lpszClassName = &szRAEditClass;
+	wc.lpszClassName = szRAEditClass;
 	eax = NULL;
 	wc.hIcon = eax;
 	wc.hIconSm = eax;
@@ -54,14 +54,14 @@ REG_T InstallRAEdit(HINSTANCE hInst, DWORD fGlobal)
 
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.style = CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = &RAEditProc;
+	wc.lpfnWndProc = RAEditProc;
 	wc.cbClsExtra = NULL;
 	wc.cbWndExtra = 4; // Holds memory handle
 	temp1 = hInst;
 	wc.hInstance = temp1;
 	wc.hbrBackground = NULL;
 	wc.lpszMenuName = NULL;
-	wc.lpszClassName = &szEditClassName;
+	wc.lpszClassName = szEditClassName;
 	eax = NULL;
 	wc.hIcon = eax;
 	wc.hIconSm = eax;
@@ -435,7 +435,7 @@ REG_T SetBlockDef(DWORD lpRABLOCKDEF)
 	if(!lpRABLOCKDEF)
 	{
 		ecx = sizeof(blockdefs)/4;
-		edi = &blockdefs;
+		edi = blockdefs;
 		eax = 0;
 		while(ecx > 0)
 		{
@@ -447,7 +447,7 @@ REG_T SetBlockDef(DWORD lpRABLOCKDEF)
 	else
 	{
 		ebx = lpRABLOCKDEF;
-		esi = &blockdefs;
+		esi = blockdefs;
 		edi = esi+32*4;
 		while(*(DWORD *)esi)
 		{
@@ -2528,7 +2528,7 @@ anon_5:
 						{
 							eax = 10;
 						} // endif
-						eax = SetTimer(NULL, 0, eax, &TimerProc);
+						eax = SetTimer(NULL, 0, eax, TimerProc);
 						TimerID = eax;
 					} // endif
 				} // endif
@@ -2647,7 +2647,7 @@ anon_5:
 				} // endif
 				cpDragSource.cpMin = eax;
 				cpDragSource.cpMax = edx;
-				eax = DoDragDrop(&pIDataObject, &pIDropSource, DROPEFFECT_COPY | DROPEFFECT_MOVE, &peff);
+				eax = DoDragDrop(pIDataObject, pIDropSource, DROPEFFECT_COPY | DROPEFFECT_MOVE, peff);
 				eax = peff;
 				if(eax==DROPEFFECT_MOVE && !(((EDIT *)ebx)->fstyle & STYLE_READONLY))
 				{
@@ -2813,7 +2813,7 @@ anon_5:
 								{
 									eax = 10;
 								} // endif
-								eax = SetTimer(NULL, 0, eax, &TimerProc);
+								eax = SetTimer(NULL, 0, eax, TimerProc);
 								TimerID = eax;
 							} // endif
 						} // endif
@@ -4019,7 +4019,7 @@ REG_T RAWndProc(HWND hWin, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// wParam=[lpLINERANGE]
 			// lParam=0
 			temp1 = nBmid;
-			esi = &blockdefs;
+			esi = blockdefs;
 			edi = esi+32*4;
 			while(*(DWORD *)esi)
 			{
@@ -4925,7 +4925,7 @@ anon_7:
 			if(lParam)
 			{
 				edx = lParam;
-				ecx = &bracketstart;
+				ecx = bracketstart;
 				while(*(BYTE *)edx && *(BYTE *)edx!=',')
 				{
 					RBYTE_LOW(eax) = *(BYTE *)edx;
@@ -4934,7 +4934,7 @@ anon_7:
 					ecx++;
 				} // endw
 				*(BYTE *)ecx = 0;
-				ecx = &bracketend;
+				ecx = bracketend;
 				if(*(BYTE *)edx==',')
 				{
 					edx++;
@@ -4947,7 +4947,7 @@ anon_7:
 					} // endw
 				} // endif
 				*(BYTE *)ecx = 0;
-				ecx = &bracketcont;
+				ecx = bracketcont;
 				if(*(BYTE *)edx==',')
 				{
 					edx++;
@@ -6231,7 +6231,7 @@ anon_8:
 
 		eax = CreateWindowEx(1, &szStatic, NULL, SS_NOTIFY | WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hWin, -1, hInstance, 0);
 		((EDIT *)ebx)->hsbtn = eax;
-		edx = &szSplitterBar;
+		edx = szSplitterBar;
 		SetToolTip();
 		eax = SetWindowLong(((EDIT *)ebx)->hsbtn, GWL_WNDPROC, &SplittBtnProc);
 		OldSplittBtnProc = eax;
@@ -6256,7 +6256,7 @@ anon_8:
 
 		eax = CreateWindowEx(NULL, &szStatic, NULL, SS_NOTIFY | WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hWin, NULL, hInstance, 0);
 		((EDIT *)ebx)->hsta = eax;
-		edx = &szChanged;
+		edx = szChanged;
 		SetToolTip();
 		eax = SetWindowLong(((EDIT *)ebx)->hsta, GWL_USERDATA, ebx);
 		eax = SetWindowLong(((EDIT *)ebx)->hsta, GWL_WNDPROC, &StateProc);
@@ -6265,32 +6265,32 @@ anon_8:
 		eax = CreateWindowEx(NULL, &szStatic, NULL, WS_POPUP | WS_BORDER | SS_OWNERDRAW, 0, 0, 0, 0, hWin, NULL, hInstance, 0);
 		((EDIT *)ebx)->htlt = eax;
 
-		eax = SetWindowLong(eax, GWL_WNDPROC, &FakeToolTipProc);
+		eax = SetWindowLong(eax, GWL_WNDPROC, FakeToolTipProc);
 		OldFakeToolTipProc = eax;
 		eax = SendMessage(((EDIT *)ebx)->htt, WM_GETFONT, 0, 0);
 		eax = SendMessage(((EDIT *)ebx)->htlt, WM_SETFONT, eax, FALSE);
 
 		eax = CreateWindowEx(NULL, &szButton, NULL, BS_BITMAP | BS_PUSHLIKE | BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hWin, -2, hInstance, 0);
 		((EDIT *)ebx)->hlin = eax;
-		edx = &szLineNumber;
+		edx = szLineNumber;
 		SetToolTip();
 		eax = SendMessage(((EDIT *)ebx)->hlin, BM_SETIMAGE, IMAGE_BITMAP, hBmpLnr);
 
 		eax = CreateWindowEx(NULL, &szButton, NULL, BS_BITMAP | BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hWin, -3, hInstance, 0);
 		((EDIT *)ebx)->hexp = eax;
-		edx = &szExpand;
+		edx = szExpand;
 		SetToolTip();
 		eax = SendMessage(((EDIT *)ebx)->hexp, BM_SETIMAGE, IMAGE_BITMAP, hBmpExp);
 
 		eax = CreateWindowEx(NULL, &szButton, NULL, BS_BITMAP | BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hWin, -4, hInstance, 0);
 		((EDIT *)ebx)->hcol = eax;
-		edx = &szCollapse;
+		edx = szCollapse;
 		SetToolTip();
 		eax = SendMessage(((EDIT *)ebx)->hcol, BM_SETIMAGE, IMAGE_BITMAP, hBmpCol);
 
 		eax = CreateWindowEx(NULL, &szButton, NULL, BS_BITMAP | BS_PUSHLIKE | BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hWin, -5, hInstance, 0);
 		((EDIT *)ebx)->hlock = eax;
-		edx = &szLock;
+		edx = szLock;
 		SetToolTip();
 		eax = SendMessage(((EDIT *)ebx)->hlock, BM_SETIMAGE, IMAGE_BITMAP, hBmpLck);
 
@@ -6298,8 +6298,8 @@ anon_8:
 		eax = SetWindowPos(((EDIT *)ebx)->hsbtn, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOSIZE); // SWP_NOREPOSITION
 		if(((EDIT *)ebx)->fstyle&STYLE_DRAGDROP)
 		{
-			eax = RegisterDragDrop(((EDIT *)ebx)->edta.hwnd, &pIDropTarget);
-			eax = RegisterDragDrop(((EDIT *)ebx)->edtb.hwnd, &pIDropTarget);
+			eax = RegisterDragDrop(((EDIT *)ebx)->edta.hwnd, pIDropTarget);
+			eax = RegisterDragDrop(((EDIT *)ebx)->edtb.hwnd, pIDropTarget);
 		} // endif
 	}
 	else if(eax==WM_DESTROY)
@@ -6590,7 +6590,7 @@ anon_9:
 	{
 		// WM_USER+9999 (=REM_RAINIT) is sendt to a custom control by RadASM (1.2.0.5)
 		// to let the custom control fill in default design time values.
-		eax = SendMessage(hWin, WM_SETTEXT, 0, &szToolTip);
+		eax = SendMessage(hWin, WM_SETTEXT, 0, szToolTip);
 		eax = 0;
 		goto Ex;
 	} // endif
