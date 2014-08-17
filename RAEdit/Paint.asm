@@ -603,7 +603,11 @@ NestedProc_DrawWord:
 
 NestedProc_DrawTabMarker:
 	.if edi && !fChr
-		pushad
+		push eax
+		push ecx
+		push edx
+		push esi
+		push edi
 		lea		esi,[eax+2]
 		sub		eax,rcleft
 		.if eax
@@ -619,7 +623,11 @@ NestedProc_DrawTabMarker:
 				dec		ecx
 			.endw
 		.endif
-		popad
+		pop edi
+		pop esi
+		pop edx
+		pop ecx
+		pop eax
 	.endif
 	retn
 
