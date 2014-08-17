@@ -1,0 +1,1664 @@
+<?php
+
+$files = array(
+	'RAEdit', 
+	'Function', 
+	'Paint', 
+	'Block', 
+	'DragDrop', 
+	'Position', 
+	'ClipBoard', 
+	'Misc', 
+	'Edit', 
+	'Undo', 
+	'Memory', 
+	'RAEditDll', 
+);
+
+foreach($files as $file)
+{
+	handle_file($file);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+function handle_file($file)
+{
+	$in_file = $file.'.asm';
+	$out_file = 'C/'.$file.'.c';
+
+	$contents = file_get_contents($in_file);
+	$contents = str_replace("\r\n", "\n", $contents);
+	
+	$contents = preprocess($contents);
+	
+	$reading_code = false;
+	
+	$out = '';
+	$indent = 0;
+	$stack_temp_used = 0;
+	$anon_labels = 0;
+	$in_nested_proc = false;
+
+	foreach(explode("\n", $contents) as $line_number => $line)
+	{
+		if(!$reading_code)
+		{
+			if(trim($line) == '.code')
+				$reading_code = true;
+			
+			continue;
+		}
+		else if(trim($line) == '.data')
+		{
+			$reading_code = false;
+			continue;
+		}
+		else if(
+			trim($line) == 'IFDEF DLL' || 
+			trim($line) == 'End DllEntry'
+		)
+			break;
+		
+		$ex = explode(';', $line, 2);
+		if(count($ex) > 1)
+		{
+			$line = trim($ex[0]);
+			$comment = trim($ex[1]);
+		}
+		else
+		{
+			$line = trim($line);
+			$comment = false;
+		}
+		
+		if($line == '')
+		{
+			if($comment !== false)
+				$out .= parse_comment($comment, $indent);
+			else
+				$out .= "\n";
+			
+			continue;
+		}
+		
+		$c = parse_proc_start($line, $indent);
+		if($c)
+			assert($stack_temp_used == 0);
+		
+		if(!$c)
+			$c = parse_proc_end($line, $indent, $in_nested_proc);
+		if($c)
+		{
+			assert($stack_temp_used == 0);
+			if($stack_temp_used != 0)
+			{
+				$a = 0;
+			}
+		}
+		
+		if(!$c)
+			$c = parse_label($line, $indent, $in_nested_proc);
+		
+		if(!$c)
+			$c = parse_anon_label($line, $indent, $anon_labels);
+		
+		if(!$c)
+			$c = parse_jmp($line, $indent, $anon_labels);
+		
+		if(!$c)
+			$c = parse_if_while($line, $indent);
+		
+		if(!$c)
+			$c = parse_else_elseif($line, $indent);
+		
+		if(!$c)
+			$c = parse_endif_endw($line, $indent);
+		
+		if(!$c)
+			$c = parse_break($line, $indent);
+		
+		if(!$c)
+			$c = parse_invoke($line, $indent);
+		
+		if(!$c)
+			$c = parse_nested_call($line, $indent);
+		
+		if(!$c)
+			$c = parse_add_sub_etc($line, $indent);
+		
+		if(!$c)
+			$c = parse_rep_stosb($line, $indent);
+		
+		if(!$c)
+			$c = parse_rep_stosd($line, $indent);
+		
+		if(!$c)
+			$c = parse_rep_movsb($line, $indent, $comment);
+		
+		if(!$c)
+			$c = parse_rep_movsd($line, $indent, $comment);
+		
+		if(!$c)
+			$c = parse_std_cld($line, $indent, $comment);
+		
+		if(!$c)
+			$c = parse_repe_cmpsd($line, $indent);
+		
+		if(!$c)
+			$c = parse_inc_dec_etc($line, $indent);
+		
+		if(!$c)
+			$c = parse_ret($line, $indent, $in_nested_proc);
+		
+		if(!$c)
+			$c = parse_local($line, $indent);
+		
+		if(!$c)
+			$c = parse_cwde($line, $indent);
+		
+		if(!$c)
+			$c = parse_push($line, $indent, $stack_temp_used, $comment);
+		
+		if(!$c)
+			$c = parse_pop($line, $indent, $stack_temp_used, $comment);
+		
+		if(!$c)
+			$c = parse_xchg($line, $indent, $stack_temp_used);
+		
+		if(!$c)
+			$c = parse_div_mul($line, $indent);
+		
+		if(!$c)
+			$c = parse_assume($line, $indent);
+		
+		if(!$c)
+		{
+			echo $out;
+			exit("Failed at line ".($line_number+1)."\n");
+		}
+		
+		if($c === true)
+			continue;
+		
+		if($comment != '')
+		{
+			if(substr_count($c, "\n") == 1 && substr($c, -1) == "\n")
+			{
+				$c = substr($c, 0, -1)." // $comment\n";
+			}
+			else
+			{
+				$c = str_repeat("\t", $indent).
+						"// $comment\n".
+						$c;
+			}
+		}
+		
+		$out .= $c;
+	}
+	
+	$out = postprocess($out, $file);
+	
+	$out = str_replace("\n", "\r\n", $out);
+	file_put_contents($out_file, $out);
+}
+
+function preprocess($contents)
+{
+	$p = <<<'EOF'
+@
+		\n
+		(\s*)(cdq\s*)
+		\n
+		(\s*idiv\s)
+@x
+EOF;
+	$r = "\n";
+	$r .= '$1;	$2'."\n";
+	$r .= '$3';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		\n
+		(\s*)(xor\s+edx,edx\s*)
+		\n
+		(\s*div\s)
+@x
+EOF;
+	$r = "\n";
+	$r .= '$1;	$2'."\n";
+	$r .= '$3';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		\n
+		\s*align\s+\d+\s*
+		\n
+@x
+EOF;
+	$r = "\n\n";
+	$contents = preg_replace($p, $r, $contents);
+	
+	return $contents;
+}
+
+function postprocess($contents, $filename)
+{
+	$includes = "#include <windows.h>\n";
+	if($filename == 'Paint')
+		$includes .= "#include <commctrl.h>\n";
+	$includes .= "#include \"Data.h\"\n";
+
+	$contents = $includes . $contents;
+	
+	$from = 'REG_T DllEntry(HINSTANCE hInst, DWORD reason, DWORD reserved1)';
+	$to = 'extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved1)';
+	$contents = str_replace($from, $to, $contents);
+
+	// struct ptr
+	
+	$p = <<<'EOF'
+@
+		\[(\w+)\]\.(\w+)\.(\w+)
+@x
+EOF;
+	$r = '(($2 *)$1)->$3';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		\[([\w+\-\s]+)\]\.(\w+)\.(\w+)
+@x
+EOF;
+	$r = '(($2 *)($1))->$3';
+	$contents = preg_replace($p, $r, $contents);
+	
+	// byte/word/dword ptrs
+	
+	$p = <<<'EOF'
+@
+		\bbyte\s+ptr\s+\[(\w+)\]
+@x
+EOF;
+	$r = '*(BYTE *)$1';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		\bword\s+ptr\s+\[(\w+)\]
+@x
+EOF;
+	$r = '*(WORD *)$1';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		\bdword\s+ptr\s+\[(\w+)\]
+@x
+EOF;
+	$r = '*(DWORD *)$1';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		\bbyte\s+ptr\s+\[([\w+\-\s]+)\]
+@x
+EOF;
+	$r = '*(BYTE *)($1)';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		\bword\s+ptr\s+\[([\w+\-\s]+)\]
+@x
+EOF;
+	$r = '*(WORD *)($1)';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		\bdword\s+ptr\s+\[([\w+\-\s]+)\]
+@x
+EOF;
+	$r = '*(DWORD *)($1)';
+	$contents = preg_replace($p, $r, $contents);
+	
+	// byte/word/dword ptrs with assignment
+	
+	$p = <<<'EOF'
+@
+		(\n\s*)
+		(\w[lh]\s*[+\-*]?=\s*)\[(e\w\w)\];
+@x
+EOF;
+	$r = '$1$2*(BYTE *)$3;';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		(\n\s*)
+		\[(e\w\w)\](\s*[+\-*]?=\s*\w[lh]);
+@x
+EOF;
+	$r = '$1*(BYTE *)$2$3;';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		(\n\s*)
+		(\w[lh]\s*[+\-*]?=\s*)\[([\w+\-*\s]+)\];
+@x
+EOF;
+	$r = '$1$2*(BYTE *)($3);';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		(\n\s*)
+		\[([\w+\-*\s]+)\](\s*[+\-*]?=\s*\w[lh]);
+@x
+EOF;
+	$r = '$1*(BYTE *)($2)$3;';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		(\n\s*)
+		(\wx\s*[+\-*]?=\s*)\[(e\w\w)\];
+@x
+EOF;
+	$r = '$1$2*(WORD *)$3;';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		(\n\s*)
+		\[(e\w\w)\](\s*[+\-*]?=\s*\wx);
+@x
+EOF;
+	$r = '$1*(WORD *)$2$3;';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		(\n\s*)
+		(\wx\s*[+\-*]?=\s*)\[([\w+\-*\s]+)\];
+@x
+EOF;
+	$r = '$1$2*(WORD *)($3);';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		(\n\s*)
+		\[([\w+\-*\s]+)\](\s*[+\-*]?=\s*\wx);
+@x
+EOF;
+	$r = '$1*(WORD *)($2)$3;';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		(\n\s*)
+		(e\w\w\s*[+\-*]?=\s*)\[(e\w\w)\];
+@x
+EOF;
+	$r = '$1$2*(DWORD *)$3;';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		(\n\s*)
+		\[(e\w\w)\](\s*[+\-*]?=\s*e\w\w);
+@x
+EOF;
+	$r = '$1*(DWORD *)$2$3;';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		(\n\s*)
+		(e\w\w\s*[+\-*]?=\s*)\[([\w+\-*\s]+)\];
+@x
+EOF;
+	$r = '$1$2*(DWORD *)($3);';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		(\n\s*)
+		\[([\w+\-*\s]+)\](\s*[+\-*]?=\s*e\w\w);
+@x
+EOF;
+	$r = '$1*(DWORD *)($2)$3;';
+	$contents = preg_replace($p, $r, $contents);
+	
+	// registers
+	
+	$p = <<<'EOF'
+@
+		\b([abcd])l\b
+@x
+EOF;
+	$r = 'RBYTE_LOW(e$1x)';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		\b([abcd])h\b
+@x
+EOF;
+	$r = 'RBYTE_HIGH(e$1x)';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		\b([abcd])x\b
+@x
+EOF;
+	$r = 'RWORD(e$1x)';
+	$contents = preg_replace($p, $r, $contents);
+	
+	// sizeof
+	
+	$p = <<<'EOF'
+@
+		\bsizeof\s+(\w+)\b
+@x
+EOF;
+	$r = 'sizeof($1)';
+	$contents = preg_replace($p, $r, $contents);
+	
+	// addr/offset
+	
+	$p = <<<'EOF'
+@
+		\b(?:addr|offset)\s+(\w+)\b
+@x
+EOF;
+	$r = '&$1';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		\b(?:addr|offset)\s+\[(.*?)\]
+@x
+EOF;
+	$r = '$1';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		\b(?:addr|offset)\b
+@x
+EOF;
+	$r = '&';
+	$contents = preg_replace($p, $r, $contents);
+	
+	// constants
+	
+	$p = <<<'EOF'
+@
+		\b([a-fA-F0-9]+)h\b
+@x
+EOF;
+	$r = '0x$1';
+	$contents = preg_replace($p, $r, $contents);
+	
+	// sdword
+	
+	$p = <<<'EOF'
+@
+		\bsdword\s+ptr\s+(e\w\w)\s*([<>=]+)\s*(\d+)\b
+@x
+EOF;
+	$r = 'R_SIGNED($1) $2 $3';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		\bsdword\s+ptr\s+(e\w\w)\s*([<>=]+)\s*(e\w\w)\b
+@x
+EOF;
+	$r = 'R_SIGNED($1) $2 R_SIGNED($3)';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		\bsdword\s+ptr\s+(e\w\w)\s*([<>=]+)\s*(\w+|\(\(\w+\s+\*)
+@x
+EOF;
+	$r = 'R_SIGNED($1) $2 (SDWORD)$3';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		\bsdword\s+ptr\s+([\w.]+)\s*([<>=]+)\s*(\d+)\b
+@x
+EOF;
+	$r = '(SDWORD)$1 $2 $3';
+	$contents = preg_replace($p, $r, $contents);
+	
+	// and/or/xor
+	
+	$p = '@(=.*?)\band\b@';
+	$r = '$1&';
+	do {
+		$contents = preg_replace($p, $r, $contents, -1, $count);
+	} while($count > 0);
+	
+	$p = '@(=.*?)\bor\b@';
+	$r = '$1|';
+	do {
+		$contents = preg_replace($p, $r, $contents, -1, $count);
+	} while($count > 0);
+	
+	$p = '@(=.*?)\bxor\b@';
+	$r = '$1^';
+	do {
+		$contents = preg_replace($p, $r, $contents, -1, $count);
+	} while($count > 0);
+	
+	$p = '@(=.*?)\bnot\b@';
+	$r = '$1~';
+	do {
+		$contents = preg_replace($p, $r, $contents, -1, $count);
+	} while($count > 0);
+	
+	// remove address
+	
+	$p = <<<'EOF'
+@
+		&(CharTabInit|CharTab|CaseTab)\b
+@x
+EOF;
+	$r = '$1';
+	$contents = preg_replace($p, $r, $contents);
+	
+	// byte ptr
+	
+	$p = <<<'EOF'
+@
+		\bbyte\s+ptr\s+(\w+)(\s+=)
+@x
+EOF;
+	$r = '*(BYTE *)(&$1)$2';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		(=\s+)byte\s+ptr\s+(\w+)
+@x
+EOF;
+	$r = '$1(BYTE)$2';
+	$contents = preg_replace($p, $r, $contents);
+	
+	// special cases
+	
+	$from = "\nREG_T IsEqualGUID";
+	$to = "/*\nREG_T IsEqualGUID";
+	$contents = str_replace($from, $to, $contents);
+	
+	$from = "} // IsEqualGUID\n";
+	$to = "} // IsEqualGUID\n*/";
+	$contents = str_replace($from, $to, $contents);
+	
+	$from = "\nREG_T strlen";
+	$to = "/*\nREG_T strlen";
+	$contents = str_replace($from, $to, $contents);
+	
+	$from = "} // strlen\n";
+	$to = "} // strlen\n*/";
+	$contents = str_replace($from, $to, $contents);
+	
+	$from = "->iu.";
+	$to = "->lpVtbl->";
+	$contents = str_replace($from, $to, $contents);
+	
+	$from = "dtp.iTabiLength";
+	$to = "dtp.iTabLength";
+	$contents = str_replace($from, $to, $contents);
+	
+	$from = "dtp.uiiLengthDrawn";
+	$to = "dtp.uiLengthDrawn";
+	$contents = str_replace($from, $to, $contents);
+	
+	$from = "'\\'";
+	$to = "'\\\\'";
+	$contents = str_replace($from, $to, $contents);
+	
+	$from = "byte ptr ";
+	$to = "(BYTE)";
+	$contents = str_replace($from, $to, $contents);
+	
+	// nested functions declaration
+	
+	$contents = handle_nested_funcs($contents);
+	
+	return $contents;
+}
+
+function handle_nested_funcs($contents)
+{
+	$ex = explode("\nREG_T ", $contents);
+	
+	foreach($ex as $index => &$func)
+	{
+		if($index == 0)
+			continue;
+		
+		$p = '~void \w+\(void\)~';
+		preg_match_all($p, $func, $m);
+		if(count($m[0]) == 0)
+			continue;
+		
+		$decls = '';
+		
+		foreach($m[0] as $decl)
+		{
+			$decls .= "\tauto $decl;\n";
+		}
+		
+		$ex2 = explode("\n\n", $func, 2);
+		$func = $ex2[0]."\n\n$decls\n".$ex2[1];
+	}
+	unset($func);
+	
+	$contents = implode("\nREG_T ", $ex);
+	
+	return $contents;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+function parse_proc_start($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	(\w+)                                    # proc name
+	\s+proc                                  # "proc"
+	(?:\s+public)?                           # "public"
+	(?:\s+uses\s+(e\w\w(?:\s+e\w\w)*)\s*(?:,|$))?  # "uses esi edi"
+	\s*((?:\w+(?::\w+)?,)*\w+(?::\w+)?)?     # arguments
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	for($i=0; $i<=3; $i++)
+		$m[$i] = issetor($m[$i], '');
+	
+	assert($indent == 0);
+	
+	$proc_name = $m[1];
+	$registers = ($m[2] == '') ? '' : preg_replace('#^|\s+#', ', ', $m[2]);
+	$arguments = '';
+	
+	if($m[3] != '')
+	{
+		foreach(explode(',', $m[3]) as $arg_type)
+		{
+			$ex = explode(':', $arg_type);
+			if(count($ex) != 2)
+			{
+				assert(count($ex) == 1);
+				list($arg, $type) = array($ex[0], 'REG_T');
+			}
+			else
+				list($arg, $type) = $ex;
+			$arguments .= "$type $arg, ";
+		}
+		
+		$arguments = trim($arguments, ', ');
+	}
+	else
+		$arguments = 'void';
+	
+	$out = "REG_T $proc_name($arguments)\n";
+	$out .= "{\n";
+	$out .= "\tREG_T eax = 0, ecx, edx$registers;\n";
+	$out .= "\tREG_T temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;\n";
+	
+	$indent++;
+	
+	return $out;
+}
+
+function parse_proc_end($line, &$indent, &$in_nested_proc)
+{
+	$p = <<<'EOF'
+@
+	^
+	(\w+)\s+                                 # proc name
+	endp                                     # "endp"
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	if($in_nested_proc)
+	{
+		assert($indent == 2);
+		$indent--;
+		$in_nested_proc = false;
+		$out = "\t}\n";
+		$out .= "\n";
+	}
+	else
+	{
+		assert($indent == 1);
+		$out = '';
+	}
+	
+	$proc_name = $m[1];
+	
+	$out .= "} // $proc_name\n";
+	
+	$indent--;
+	
+	return $out;
+}
+
+function parse_label($line, &$indent, &$in_nested_proc)
+{
+	$p = <<<'EOF'
+@
+	^
+	(\w+):                                   # label name
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	$label_name = $m[1];
+	
+	if(substr($label_name, 0, strlen('NestedProc_')) == 'NestedProc_')
+	{
+		if($in_nested_proc)
+		{
+			assert($indent >= 2);
+			$indent--;
+			$out0 = "}\n";
+		}
+		else
+		{
+			$in_nested_proc = true;
+			$out0 = '';
+		}
+		
+		$label_name = substr($label_name, strlen('NestedProc_'));
+		$out = "void $label_name(void)\n";
+		$out .= "{\n";
+		$out .= "\tREG_T temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;\n";
+		
+		if($out0 != '')
+			$out = indent($out0, $indent)."\n".indent($out, $indent);
+		else
+			$out = indent($out, $indent);
+		
+		$indent++;
+	}
+	else if(
+		substr($label_name, 0, strlen('_REM_')) == '_REM_' || 
+		substr($label_name, 0, strlen('_EM_')) == '_EM_'
+	)
+	{
+		$label_name = substr($label_name, strlen('_'));
+		$out = "case $label_name:\n";
+		$out = indent($out, $indent-1);
+	}
+	else if($label_name == '_DefRichEditMsg' || $label_name == '_DefEditMsg')
+	{
+		$out = "default:\n";
+		$out = indent($out, $indent-1);
+	}
+	else
+		$out = "$label_name:\n";
+	
+	return $out;
+}
+
+function parse_anon_label($line, &$indent, &$anon_labels)
+{
+	$p = <<<'EOF'
+~
+	^
+	@@:                                     #
+	$
+~x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	$anon_labels++;
+	$out = "anon_$anon_labels:\n";
+	
+	return $out;
+}
+
+function parse_jmp($line, &$indent, $anon_labels)
+{
+	// try special cases
+	switch($line)
+	{
+	case 'jmp 	DWORD PTR [offset _REM_BASE+eax*4]':
+		assert($indent >= 1);
+		$out = "switch(eax + REM_BASE)\n";
+		$out .= "{\n";
+		$out = indent($out, $indent);
+		$indent++;
+		return $out;
+		
+	case 'jmp		DWORD PTR [offset _RICHEDIT_MSG+eax*4]':
+		assert($indent >= 1);
+		$out = "switch(eax + EM_CANPASTE)\n";
+		$out .= "{\n";
+		$out = indent($out, $indent);
+		$indent++;
+		return $out;
+		
+	case 'jmp		DWORD PTR [offset _EDIT_MSG+eax*4]':
+		assert($indent >= 1);
+		$out = "switch(eax + EM_GETSEL)\n";
+		$out .= "{\n";
+		$out = indent($out, $indent);
+		$indent++;
+		return $out;
+	}
+	
+	
+	$p = <<<'EOF'
+~
+	^
+	jmp\s+                                   # "jmp"
+	(\w+|@b|@f)                              # label name
+	$
+~x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	$label_name = $m[1];
+	
+	switch($label_name)
+	{
+	case '@b':
+		$out = "goto anon_$anon_labels;\n";
+		break;
+	
+	case '@f':
+		$out = "goto anon_".($anon_labels+1).";\n";
+		break;
+	
+	default:
+		$out = "goto $label_name;\n";
+		break;
+	}
+	
+	return indent($out, $indent);
+}
+
+function parse_if_while($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	\.(if|while)\s+                          # ".if" / ".while"
+	(.+?)                                    # exp
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	$cond = $m[1];
+	$exp = $m[2];
+	
+	$out = str_repeat("\t", $indent).
+			"$cond($exp)\n";
+	$out .= str_repeat("\t", $indent).
+			"{\n";
+	
+	$indent++;
+	
+	return $out;
+}
+
+function parse_else_elseif($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	\.(else|elseif)                          # ".else" / ".elseif"
+	(?:\s+(.+?))?                            # exp
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	for($i=0; $i<=2; $i++)
+		$m[$i] = issetor($m[$i], '');
+	
+	assert($indent > 1);
+	
+	$cond = $m[1];
+	$exp = $m[2];
+	
+	if($cond == 'elseif')
+		$cond = 'else if';
+	
+	if($exp != '')
+		$exp = "($exp)";
+	else
+		assert($cond == 'else');
+	
+	$out = str_repeat("\t", $indent-1).
+			"}\n";
+	$out .= str_repeat("\t", $indent-1).
+			"$cond$exp\n";
+	$out .= str_repeat("\t", $indent-1).
+			"{\n";
+	
+	return $out;
+}
+
+function parse_endif_endw($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	\.(endif|endw)                           # ".endif" / ".endw"
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent > 1);
+	
+	$comment = $m[1];
+	
+	$indent--;
+	
+	$out = "} // $comment\n";
+	
+	return indent($out, $indent);
+}
+
+function parse_break($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	\.break(?:\s*\.if\s+(.+?))?
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	for($i=0; $i<=1; $i++)
+		$m[$i] = issetor($m[$i], '');
+	
+	assert($indent >= 1);
+	
+	$exp = $m[1];
+	
+	if($exp != '')
+	{
+		$out = <<<EOF
+if($exp)
+{
+	break;
+}
+
+EOF;
+	}
+	else
+		$out = "break;\n";
+	
+	return indent($out, $indent);
+}
+
+function parse_invoke($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	invoke\s+
+	(\w+\s+ptr\s+|)
+	([\w.\[\]+\-*/]+|[\w\[\]\(\)+\-*/][\w\[\]\(\)+\-*/\s]+[\w\[\]\(\)+\-*/])  # proc name
+	((?:,[\w\. \[\]\-+*]+)*)?                # arguments
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	$ptr_cast = $m[1];
+	$proc_name = $m[2];
+	$arguments = preg_replace('#\s*,\s*#', ', ', $m[3]);
+	
+	$arguments = trim($arguments, ', ');
+	
+	if($ptr_cast != '')
+	{
+		$ptr_cast = preg_replace('/^(\w+)\s.*$/', '$1', $ptr_cast);
+		$out = "eax = (($ptr_cast)$proc_name)($arguments);\n";
+	}
+	else
+		$out = "eax = $proc_name($arguments);\n";
+	
+	return indent($out, $indent);
+}
+
+function parse_nested_call($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	call\s+
+	NestedProc_(\w+)
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	$proc_name = $m[1];
+	
+	$out = "$proc_name();\n";
+	
+	return indent($out, $indent);
+}
+
+function parse_add_sub_etc($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	(mov(?:zx)?|add|sub|or|and|xor|lea|shl|shr)\s+       # cmd
+	(                                                    # dest
+		[\w.\[\]+\-*/.]+
+		|
+		[\w\[\]\(\)+\-*/][\w\[\]\(\)+\-*/\s.]+[\w\[\]\(\)+\-*/]
+	)
+	\s*,\s*
+	(                                                    # src
+		[\w\[\]+\-*/.]+
+		|
+		[\w\[\]\(\)+\-*/][\w\[\]\(\)+\-*/\s.]+[\w\[\]\(\)+\-*/]
+		|
+		'.'
+	)
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	$cmd = $m[1];
+	$dest = $m[2];
+	$src = $m[3];
+	
+	switch($cmd)
+	{
+	case 'mov':
+	case 'movzx':
+		$out = "$dest = $src;\n";
+		break;
+	
+	case 'lea':
+		$src_ptr = preg_replace('#^\[([^\]]*?)\]$#', '$1$2', $src);
+		if($src_ptr != $src)
+			$out = "$dest = $src_ptr;\n";
+		else
+			$out = "$dest = &$src;\n";
+		break;
+	
+	case 'add':
+		$out = "$dest += $src;\n";
+		break;
+	
+	case 'sub':
+		$out = "$dest -= $src;\n";
+		break;
+	
+	case 'or':
+		$out = "$dest |= $src;\n";
+		break;
+	
+	case 'and':
+		$out = "$dest &= $src;\n";
+		break;
+	
+	case 'xor':
+		if($dest == $src)
+			$out = "$dest = 0;\n";
+		else
+			$out = "$dest ^= $src;\n";
+		break;
+	
+	case 'shl':
+		if($src <= 2)
+			$out = "$dest *= ".pow($src, 2).";\n";
+		else
+			$out = "$dest <<= $src;\n";
+		break;
+	
+	case 'shr':
+		if($src <= 2)
+			$out = "$dest /= ".pow($src, 2).";\n";
+		else
+			$out = "$dest >>= $src;\n";
+		break;
+	}
+	
+	return indent($out, $indent);
+}
+
+function parse_rep_stosb($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	rep\s+stosb
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	$out = <<<EOF
+while(ecx > 0)
+{
+	*(BYTE *)edi = al;
+	edi++;
+	ecx--;
+}
+
+EOF;
+
+	return indent($out, $indent);
+}
+
+function parse_rep_stosd($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	rep\s+stosd
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	$out = <<<EOF
+while(ecx > 0)
+{
+	*(DWORD *)edi = eax;
+	edi += 4;
+	ecx--;
+}
+
+EOF;
+
+	return indent($out, $indent);
+}
+
+function parse_rep_movsb($line, &$indent, &$comment)
+{
+	$p = <<<'EOF'
+@
+	^
+	rep\s+movsb
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	if($comment == 'reverse')
+	{
+		$comment = false;
+		$out = <<<EOF
+while(ecx > 0)
+{
+	*(BYTE *)edi = *(BYTE *)esi;
+	edi--;
+	esi--;
+	ecx--;
+}
+
+EOF;
+	}
+	else
+	{
+		$out = <<<EOF
+while(ecx > 0)
+{
+	*(BYTE *)edi = *(BYTE *)esi;
+	edi++;
+	esi++;
+	ecx--;
+}
+
+EOF;
+	}
+
+	return indent($out, $indent);
+}
+
+function parse_rep_movsd($line, &$indent, &$comment)
+{
+	$p = <<<'EOF'
+@
+	^
+	rep\s+movsd
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	if($comment == 'reverse')
+	{
+		$comment = false;
+		$out = <<<EOF
+while(ecx > 0)
+{
+	*(DWORD *)edi = *(DWORD *)esi;
+	edi -= 4;
+	esi -= 4;
+	ecx--;
+}
+
+EOF;
+	}
+	else
+	{
+		$out = <<<EOF
+while(ecx > 0)
+{
+	*(DWORD *)edi = *(DWORD *)esi;
+	edi += 4;
+	esi += 4;
+	ecx--;
+}
+
+EOF;
+	}
+
+	return indent($out, $indent);
+}
+
+function parse_std_cld($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	std|cld
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	return true;
+}
+
+function parse_repe_cmpsd($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	setz\s+al
+	$
+@x
+EOF;
+	if(preg_match($p, $line, $m))
+		return true;
+	
+	$p = <<<'EOF'
+@
+	^
+	repe\s+cmpsd
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	$out = <<<EOF
+eax = memcmp(esi, edi, ecx*4) == 0;
+
+EOF;
+
+	return indent($out, $indent);
+}
+
+function parse_inc_dec_etc($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	(inc|dec|neg)\s+
+	([\w.\[\]+\-*/]+|[\w\[\]+\-*/][\w\[\]+\-*/\s]+[\w\[\]+\-*/])
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	$cmd = $m[1];
+	$dest = $m[2];
+	
+	switch($cmd)
+	{
+	case 'inc':
+		$out = "$dest++;\n";
+		break;
+	
+	case 'dec':
+		$out = "$dest--;\n";
+		break;
+	
+	case 'neg':
+		$out = "$dest = -$dest;\n";
+		break;
+	}
+	
+	return indent($out, $indent);
+}
+
+
+function parse_ret($line, &$indent, &$in_nested_proc)
+{
+	$p = <<<'EOF'
+@
+	^
+	retn?                                    # "mov"
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	if($in_nested_proc)
+	{
+		assert($indent >= 2);
+		$out = "return;\n";
+	}
+	else
+		$out = "return eax;\n";
+	
+	return indent($out, $indent);
+}
+
+function parse_local($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	LOCAL\s+                                 # "LOCAL"
+	(\w+)(\[\d+\])?\s*:\s*(\w+)              # name[count]:type
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	$name = $m[1];
+	$count = $m[2];
+	$type = $m[3];
+	
+	$out = "$type $name$count;\n";
+	
+	return indent($out, $indent);
+}
+
+function parse_cwde($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	cwde
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	$out = "R_SIGNED(eax) = RWORD_SIGNED(eax);\n";
+	
+	return indent($out, $indent);
+}
+
+function parse_push($line, &$indent, &$stack_temp_used, &$comment)
+{
+	$p = <<<'EOF'
+@
+	^
+	push\s+                                      # "push"
+	([\w\[\]\.]+)                                # exp
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	if($comment && 
+		preg_match('/^stack_temp_used ([+\-])(\d+)$/', $comment, $m2))
+	{
+		$stack_temp_used += ($m2[1] == '-') ? -intval($m2[2]) : intval($m2[2]);
+		$comment = false;
+	}
+	
+	assert($stack_temp_used < 8);
+	
+	$exp = $m[1];
+	
+	$stack_temp_used++;
+	
+	$out = "temp$stack_temp_used = $exp;\n";
+	
+	return indent($out, $indent);
+}
+
+function parse_pop($line, &$indent, &$stack_temp_used, &$comment)
+{
+	$p = <<<'EOF'
+@
+	^
+	(pop_?)\s+
+	([\w\[\]\.]+)                                # exp
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	assert($stack_temp_used > 0);
+	if($stack_temp_used == 0)
+	{
+		$a=1;
+	}
+	
+	$cmd = $m[1];
+	$exp = $m[2];
+	
+	$out = "$exp = temp$stack_temp_used;\n";
+	
+	$stack_temp_used--;
+	
+	if($comment && 
+		preg_match('/^stack_temp_used ([+\-])(\d+)$/', $comment, $m2))
+	{
+		$stack_temp_used += ($m2[1] == '-') ? -intval($m2[2]) : intval($m2[2]);
+		$comment = false;
+	}
+	
+	return indent($out, $indent);
+}
+
+function parse_xchg($line, &$indent, &$stack_temp_used)
+{
+	$p = <<<'EOF'
+@
+	^
+	xchg\s+
+	([\w.\[\]+\-*/]+|[\w\[\]\(\)+\-*/][\w\[\]\(\)+\-*/\s]+[\w\[\]\(\)+\-*/]) # dest
+	\s*,\s*
+	([\w.\[\]+\-*/]+|[\w\[\]\(\)+\-*/][\w\[\]\(\)+\-*/\s]+[\w\[\]\(\)+\-*/]) # src
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	assert($stack_temp_used < 8);
+	
+	$dest = $m[1];
+	$src = $m[2];
+	
+	$stack_temp_used++;
+	
+	$out = "temp$stack_temp_used = $dest;\n";
+	$out .= "$dest = $src;\n";
+	$out .= "$src = temp$stack_temp_used;\n";
+	
+	$stack_temp_used--;
+	
+	return indent($out, $indent);
+}
+
+function parse_div_mul($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	(mul|imul|div|idiv)\s+
+	([\w\[\]\.]+)                                # exp
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	$cmd = $m[1];
+	$exp = $m[2];
+	
+	switch($cmd)
+	{
+	case 'idiv':
+		$out = "R_SIGNED(eax) /= TO_R_SIGNED($exp);\n";
+		break;
+	
+	case 'div':
+		$out = "eax /= $exp;\n";
+		break;
+	
+	case 'imul':
+		// high dword of result isn't used, so we can do unsigned operations
+		assert(0); // is it even used?
+		//$out = "R_SIGNED(eax) *= $exp;\n";
+		//break;
+	
+	case 'mul':
+		$out = "eax *= $exp;\n";
+		break;
+	}
+	
+	return indent($out, $indent);
+}
+
+function parse_assume($line, &$indent)
+{
+	$p = <<<'EOF'
+@
+	^
+	assume\s.*
+	$
+@x
+EOF;
+	if(!preg_match($p, $line, $m))
+		return false;
+	
+	assert($indent >= 1);
+	
+	return true;
+}
+
+function parse_comment($comment, &$indent)
+{
+	// check for special values
+	if(substr($comment, 0, strlen('END OF: ')) == 'END OF: ')
+	{
+		$indent--;
+		$out = "} // $comment\n";
+		return indent($out, $indent);
+	}
+	
+	$out = "// $comment\n";
+	
+	return indent($out, $indent);
+}
+
+function indent($text, $indent)
+{
+	return rtrim(preg_replace('#(^|\n)#', '$1'.str_repeat("\t", $indent), $text), "\t");
+}
+
+// http://stackoverflow.com/a/5836648
+
+function issetor(&$var, $default = false)
+{
+	return isset($var) ? $var : $default;
+}

@@ -1,0 +1,176 @@
+<?php
+
+$files = array(
+	'RAEdit', 
+	'Block', 
+	'ClipBoard', 
+	'DragDrop', 
+	'Edit', 
+	'Function', 
+	'Memory', 
+	'Misc', 
+	'Paint', 
+	'Position', 
+	'RAEditDll', 
+	'Undo', 
+);
+
+foreach($files as $file)
+{
+	handle_file($file);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+function handle_file($file)
+{
+	$file = $file.'.asm';
+
+	$contents = file_get_contents($file);
+	$contents = str_replace("\r\n", "\n", $contents);
+
+	$contents = mutate($contents);
+
+	$contents = str_replace("\n", "\r\n", $contents);
+	file_put_contents($file, $contents);
+}
+
+function mutate($contents)
+{
+	$p = <<<'EOF'
+@
+		\n
+		\s*call\s+(\w+)\s*
+		\n
+@x
+EOF;
+	
+	if(!preg_match_all($p, $contents, $m))
+		return $contents;
+	
+	$labels = array_unique($m[1]);
+	
+	foreach($labels as $label)
+	{
+		$p = '#\b'.$label.'\b#';
+		$contents = preg_replace($p, 'NestedProc_$0', $contents);
+	}
+	
+	return $contents;
+
+
+
+
+
+
+
+
+
+
+
+
+	$p = <<<'EOF'
+@
+		test\s+([\w\[\]\.]+)
+		\s*,\s*
+		([\w\[\]\.]+)
+		\s*\n\s*
+		\.if\s+!ZERO\?
+@x
+EOF;
+	$r = '.if $1 & $2';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		test\s+([\w\[\]\.]+)
+		\s*,\s*
+		([\w\[\]\.]+)
+		\s*\n\s*
+		\.if\s+ZERO\?
+@x
+EOF;
+	$r = '.if ($1 & $2) == 0';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		sub\s+([\w\[\]\.]+)
+		\s*,\s*
+		([\w\[\]\.]+)
+		\s*\n\s*
+		\.if\s+CARRY\?
+@x
+EOF;
+	$r = '.if ($1 & $2) == 0';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		xchg\s+([\w\[\]\.]+)
+		\s*,\s*
+		([\w\[\]\.]+)
+@x
+EOF;
+	$r = 'push $1';
+	$r .= "\n";
+	$r .= 'push $2';
+	$r .= "\n";
+	$r .= 'pop $1';
+	$r .= "\n";
+	$r .= 'pop $2';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+@
+		cdq
+		\s*\n\s*
+		idiv(\s)
+@x
+EOF;
+	$r = 'idiv$1';
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+~
+		(dec\s+([\w\[\]\.]+))
+		\s*\n\s*
+		je\s+(\w+|@b|@f)
+		\s*\n
+~x
+EOF;
+$r = <<<'EOF'
+$1
+.if !$2
+	jmp $3
+.endif
+
+EOF;
+	$contents = preg_replace($p, $r, $contents);
+	
+	$p = <<<'EOF'
+~
+		(dec\s+([\w\[\]\.]+))
+		\s*\n\s*
+		jne\s+(\w+|@b|@f)
+		\s*\n
+~x
+EOF;
+$r = <<<'EOF'
+$1
+.if $2
+	jmp $3
+.endif
+
+EOF;
+	$contents = preg_replace($p, $r, $contents);
+	
+	return $contents;
+}
+
+// http://stackoverflow.com/a/5836648
+
+function issetor(&$var, $default = false)
+{
+	return isset($var) ? $var : $default;
+}
