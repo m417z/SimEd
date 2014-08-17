@@ -824,13 +824,15 @@ Nf:
 	void SkipSpc(void)
 	{
 		REG_T temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
+
+SkipSpcStart:
 		if(ecx<((CHARS *)edi)->len)
 		{
 			RBYTE_LOW(eax) = *(BYTE *)(edi+ecx+sizeof(CHARS));
 			if(RBYTE_LOW(eax)==VK_TAB || RBYTE_LOW(eax)==' ' || RBYTE_LOW(eax)==':' || (RBYTE_LOW(eax)=='*' && ((EDIT *)ebx)->ccmntblocks!=1))
 			{
 				ecx++;
-				goto NestedProc_SkipSpc;
+				goto SkipSpcStart;
 			}
 			else if(RBYTE_LOW(eax)=='"')
 			{
@@ -839,7 +841,7 @@ Nf:
 				{
 					ecx++;
 				} // endif
-				goto NestedProc_SkipSpc;
+				goto SkipSpcStart;
 			}
 			else if(RBYTE_LOW(eax)==(BYTE)bracketcont)
 			{
@@ -858,7 +860,7 @@ Nf:
 							goto SkipSpcNf;
 						} // endif
 						ecx = 0;
-						goto NestedProc_SkipSpc;
+						goto SkipSpcStart;
 					}
 					else
 					{
@@ -920,6 +922,8 @@ SkipSpcNf:
 	void SkipWord(void)
 	{
 		REG_T temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
+
+SkipWordStart:
 		if(ecx<((CHARS *)edi)->len)
 		{
 			eax = *(BYTE *)(edi+ecx+sizeof(CHARS));
@@ -930,7 +934,7 @@ SkipSpcNf:
 				if(RBYTE_LOW(eax)==CT_CHAR || RBYTE_LOW(eax)==CT_HICHAR)
 				{
 					ecx++;
-					goto NestedProc_SkipWord;
+					goto SkipWordStart;
 				}
 				else
 				{
@@ -952,6 +956,13 @@ SkipSpcNf:
 		} // endif
 		return;
 
+	}
+
+	void TestWord(void)
+	{
+		REG_T temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
+		goto TestWordStart;
+
 anon_1:
 		esi++;
 		ecx++;
@@ -962,11 +973,8 @@ anon_1:
 			eax--;
 			return;
 		} // endif
-	}
 
-	void TestWord(void)
-	{
-		REG_T temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
+TestWordStart:
 		RWORD(eax) = *(WORD *)esi;
 		if(RBYTE_LOW(eax)==0)
 		{
@@ -1138,7 +1146,7 @@ anon_1:
 			SkipCmnt();
 			esi++;
 			esi++;
-			goto NestedProc_TestWord;
+			goto TestWordStart;
 		} // endif
 		RBYTE_HIGH(eax) = *(BYTE *)(edi+ecx+sizeof(CHARS));
 		if(RBYTE_LOW(eax)>='a' && RBYTE_LOW(eax)<='z')

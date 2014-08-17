@@ -608,17 +608,19 @@ NestedProc_SkipCmnt:
 	retn
 
 NestedProc_SkipSpc:
+
+SkipSpcStart:
 	.if ecx<[edi].CHARS.len
 		mov		al,[edi+ecx+sizeof CHARS]
 		.if al==VK_TAB || al==' ' || al==':' || (al=='*' && [ebx].EDIT.ccmntblocks!=1)
 			inc		ecx
-			jmp		NestedProc_SkipSpc
+			jmp		SkipSpcStart
 		.elseif al=='"'
 			call	NestedProc_SkipString
 			.if byte ptr [edi+ecx+sizeof CHARS]=='"'
 				inc		ecx
 			.endif
-			jmp		NestedProc_SkipSpc
+			jmp		SkipSpcStart
 		.elseif al==byte ptr bracketcont
 			.if byte ptr [edi+ecx+sizeof CHARS+1]==VK_RETURN
 				inc		nLine
@@ -632,7 +634,7 @@ NestedProc_SkipSpc:
 						jmp		SkipSpcNf
 					.endif
 					xor		ecx,ecx
-					jmp		NestedProc_SkipSpc
+					jmp		SkipSpcStart
 				.else
 					jmp		SkipSpcNf
 				.endif
@@ -676,6 +678,8 @@ NestedProc_OptSkipWord:
 	retn
 
 NestedProc_SkipWord:
+
+SkipWordStart:
 	.if ecx<[edi].CHARS.len
 		movzx	eax,byte ptr [edi+ecx+sizeof CHARS]
 		.if eax!=VK_TAB && eax!=' ' && eax!=':'
@@ -683,7 +687,7 @@ NestedProc_SkipWord:
 			mov		al,[eax]
 			.if al==CT_CHAR || al==CT_HICHAR
 				inc		ecx
-				jmp		NestedProc_SkipWord
+				jmp		SkipWordStart
 			.else
 				.if al==CT_CMNTCHAR
 					mov		ecx,[edi].CHARS.len
@@ -700,6 +704,9 @@ NestedProc_SkipWord:
 	.endif
 	retn
 
+NestedProc_TestWord:
+	jmp TestWordStart
+
   @@:
 	inc		esi
 	inc		ecx
@@ -709,7 +716,8 @@ NestedProc_SkipWord:
 		dec		eax
 		retn
 	.endif
-NestedProc_TestWord:
+
+TestWordStart:
 	mov		ax,[esi]
 	.if al==0
 		jmp		@f
@@ -841,7 +849,7 @@ NestedProc_TestWord:
 		call	NestedProc_SkipCmnt
 		inc		esi
 		inc		esi
-		jmp		NestedProc_TestWord
+		jmp		TestWordStart
 	.endif
 	mov		ah,[edi+ecx+sizeof CHARS]
 	.if al>='a' && al<='z'
