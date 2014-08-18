@@ -3622,7 +3622,6 @@ SizeIt:
 		.if ZERO?
 			invoke MoveWindow,[ebx].EDIT.hsta,0,0,4,4,TRUE
 		.else
-
 			invoke MoveWindow,[ebx].EDIT.hsta,0,0,0,0,TRUE
 		.endif
 	.endif
