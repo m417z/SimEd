@@ -351,7 +351,6 @@ InsertMem:
 EditPasteBlock endp
 
 Paste proc uses ebx esi edi,hMem:DWORD,hWin:DWORD,hData:DWORD
-	LOCAL	pt:POINT
 	LOCAL	blrg:BLOCKRANGE
 
 	mov		ebx,hMem
@@ -387,7 +386,6 @@ Paste proc uses ebx esi edi,hMem:DWORD,hWin:DWORD,hData:DWORD
 Paste endp
 
 Cut proc uses ebx esi,hMem:DWORD,hWin:DWORD
-	LOCAL	pt:POINT
 
 	mov		ebx,hMem
 	mov		eax,hWin

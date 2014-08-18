@@ -1129,7 +1129,6 @@ RAEditPaint proc uses ebx esi edi,hWin:HWND
 	LOCAL	mDC:HDC
 	LOCAL	rect:RECT
 	LOCAL	rect1:RECT
-	LOCAL	rect2:RECT
 	LOCAL	cp:DWORD
 	LOCAL	buffer[32]:BYTE
 	LOCAL	hRgn1:DWORD
@@ -1494,7 +1493,6 @@ RAEditPaintNoBuff proc uses ebx esi edi,hWin:HWND
 	LOCAL	ps:PAINTSTRUCT
 	LOCAL	rect:RECT
 	LOCAL	rect1:RECT
-	LOCAL	rect2:RECT
 	LOCAL	cp:DWORD
 	LOCAL	buffer[32]:BYTE
 	LOCAL	hRgn1:DWORD

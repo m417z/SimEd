@@ -295,7 +295,6 @@ SaveUndo proc uses ebx esi edi,hMem:DWORD,nFun:DWORD,cp:DWORD,lp:DWORD,cb:DWORD
 SaveUndo endp
 
 Undo proc uses ebx,hMem:DWORD,hWin:DWORD
-	LOCAL	pt:POINT
 
 	mov		ebx,hMem
 	test	[ebx].EDIT.nMode,MODE_BLOCK
@@ -317,8 +316,6 @@ Undo proc uses ebx,hMem:DWORD,hWin:DWORD
 Undo endp
 
 Redo proc uses ebx,hMem:DWORD,hWin:DWORD
-	LOCAL	pt:POINT
-	LOCAL	oldrects[2]:RECT
 
 	mov		ebx,hMem
 	test	[ebx].EDIT.nMode,MODE_BLOCK
