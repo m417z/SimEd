@@ -351,7 +351,6 @@ IsLine proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,lpszTest:DWORD
 	LOCAL	tmpesi:DWORD
 	LOCAL	fCmnt:DWORD
 	LOCAL	espsave:DWORD
-	LOCAL	esisave:DWORD
 
 	mov		eax,esp
 	sub		eax,4
@@ -360,20 +359,13 @@ IsLine proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,lpszTest:DWORD
 	mov		edi,nLine
 	shl		edi,2
 	mov		esi,lpszTest
+	mov		eax,-1
 	.if edi<[ebx].EDIT.rpLineFree && byte ptr [esi]
-		.while byte ptr [esi]
-			mov		esisave,esi
+		.if byte ptr [esi]
 			mov		edi,nLine
 			shl		edi,2
 			call	TestLine
-			.break .if eax!=-1
-			mov		esi,esisave
-			invoke strlen,esi
-			lea		esi,[esi+eax+1]
-			mov		eax,-1
-		.endw
-	.else
-		mov		eax,-1
+		.endif
 	.endif
 	ret
 
