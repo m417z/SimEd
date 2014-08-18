@@ -1408,7 +1408,7 @@ REG_T SetCommentBlocks(DWORD hMem, DWORD lpStart, DWORD lpEnd)
 				} // endif
 				ecx++;
 			} // endw
-			((CHARS *)esi)->state &= -1 ^ STATE_COMMENT | STATE_COMMENTNEST;
+			((CHARS *)esi)->state &= -1 ^ (STATE_COMMENT | STATE_COMMENTNEST);
 			if(nCmnt>1 || fCmnt)
 			{
 				((CHARS *)esi)->state |= STATE_COMMENT;
@@ -1481,7 +1481,7 @@ REG_T SetCommentBlocks(DWORD hMem, DWORD lpStart, DWORD lpEnd)
 				} // endif
 				ecx++;
 			} // endw
-			((CHARS *)esi)->state &= -1 ^ STATE_COMMENT | STATE_COMMENTNEST;
+			((CHARS *)esi)->state &= -1 ^ (STATE_COMMENT | STATE_COMMENTNEST);
 			if(nCmnt>1 || fCmnt)
 			{
 				((CHARS *)esi)->state |= STATE_COMMENT;
