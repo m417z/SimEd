@@ -811,6 +811,7 @@ SetCaretVisible endp
 
 GetBlockCp proc uses ebx edi,hMem:DWORD,nLine:DWORD,nPos:DWORD
 
+	mov		ebx,hMem
 	invoke GetCpFromLine,ebx,nLine
 	mov		edi,eax
 	mov		eax,nPos

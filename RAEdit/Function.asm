@@ -2257,6 +2257,7 @@ BracketMatch endp
 
 GetLineBegin proc uses ebx esi edi,hMem:DWORD,nLine:DWORD
 
+	mov		ebx,hMem
 	mov		eax,nLine
 	.if eax
 		.while nLine
@@ -2269,7 +2270,7 @@ GetLineBegin proc uses ebx esi edi,hMem:DWORD,nLine:DWORD
 			mov		ecx,[esi].CHARS.len
 			.break .if ecx<2
 			mov		al,[esi+ecx+sizeof CHARS-2]
-			.break .if al!=bracketcont && al !=bracketcont[1]
+			.break .if al!=bracketcont && al!=bracketcont[1]
 		.endw
 		mov		eax,nLine
 		inc		eax
