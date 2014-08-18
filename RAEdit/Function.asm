@@ -1352,6 +1352,7 @@ TrimSpace proc uses ebx edi,hMem:DWORD,nLine:DWORD,fLeft:DWORD
 	mov		cp,eax
 	shl		edi,2
 	xor		edx,edx
+	xor		ecx,ecx
 	.if edi<[ebx].EDIT.rpLineFree
 		add		edi,[ebx].EDIT.hLine
 		mov		edi,[edi].LINE.rpChars
@@ -1360,7 +1361,6 @@ TrimSpace proc uses ebx edi,hMem:DWORD,nLine:DWORD,fLeft:DWORD
 		.if edx
 			.if fLeft
 				;Left trim (Not implemented)
-				xor		ecx,ecx
 			.else
 				;Right trim
 				push	edx
