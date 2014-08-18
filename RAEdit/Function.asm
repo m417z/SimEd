@@ -4,8 +4,8 @@
 FindTheText proc uses ebx esi edi,hMem:DWORD,pFind:DWORD,fMC:DWORD,fWW:DWORD,fWhiteSpace:DWORD,cpMin:DWORD,cpMax:DWORD,fDir:DWORD
 	LOCAL	nLine:DWORD
 	LOCAL	lnlen:DWORD
-	LOCAL	lpFind[15]:DWORD
-	LOCAL	len[15] :DWORD
+	LOCAL	lpFind[16]:DWORD
+	LOCAL	len[16] :DWORD
 	LOCAL	findbuff[512]:BYTE
 	LOCAL	nIgnore:DWORD
 	LOCAL	prev:DWORD
