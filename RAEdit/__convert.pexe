@@ -1171,14 +1171,14 @@ EOF;
 	
 	case 'shl':
 		if($src <= 2)
-			$out = "$dest *= ".pow($src, 2).";\n";
+			$out = "$dest *= ".pow(2, $src).";\n";
 		else
 			$out = "$dest <<= $src;\n";
 		break;
 	
 	case 'shr':
 		if($src <= 2)
-			$out = "$dest /= ".pow($src, 2).";\n";
+			$out = "$dest /= ".pow(2, $src).";\n";
 		else
 			$out = "$dest >>= $src;\n";
 		break;

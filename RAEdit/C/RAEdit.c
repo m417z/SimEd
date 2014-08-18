@@ -2840,7 +2840,7 @@ anon_5:
 						eax -= edx;
 						edx = ((EDIT *)ebx)->fntinfo.fntht;
 						edx -= 7;
-						edx /= 1;
+						edx /= 2;
 						eax -= edx;
 						if(eax<12)
 						{
@@ -4276,7 +4276,7 @@ anon_7:
 			// wParam=0
 			// lParam=0
 			eax = ((RAEDT *)esi)->rc.bottom;
-			eax /= 1;
+			eax /= 2;
 			ecx = ((EDIT *)ebx)->fntinfo.fntht;
 			// xor		edx,edx
 			eax /= ecx;

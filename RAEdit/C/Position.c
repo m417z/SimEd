@@ -144,7 +144,7 @@ REG_T GetCharPtr(DWORD hMem, DWORD cp)
 	}
 	else
 	{
-		edx /= 1;
+		edx /= 2;
 		if(eax>=edx)
 		{
 			ecx = ((EDIT *)ebx)->cpLine;
@@ -455,7 +455,7 @@ REG_T GetCpFromXp(DWORD hMem, DWORD lpChars, DWORD x, DWORD fNoAdjust)
 	lastright = eax;
 	esi = lpChars;
 	edi = ((CHARS *)esi)->len;
-	edi /= 1;
+	edi /= 2;
 	edx = edi;
 	ecx = 0;
 anon_8:
@@ -464,7 +464,7 @@ anon_8:
 	TestIt();
 	edx = temp3;
 	ecx = temp2;
-	edx /= 1;
+	edx /= 2;
 	if(R_SIGNED(eax) > (SDWORD)x)
 	{
 		edi -= edx;
@@ -509,7 +509,7 @@ anon_8:
 		{
 			edx -= eax;
 			edx = -edx;
-			edx /= 1;
+			edx /= 2;
 			eax -= edx;
 		} // endif
 		if(R_SIGNED(eax) > (SDWORD)x)

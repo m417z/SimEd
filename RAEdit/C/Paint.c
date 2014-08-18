@@ -700,7 +700,7 @@ anon_1:
 				{
 					temp1 = rect.top;
 					eax = ((EDIT *)ebx)->fntinfo.linespace;
-					eax /= 1;
+					eax /= 2;
 					rect.top += eax;
 					eax = lCol;
 					eax >>= 24;
@@ -799,7 +799,7 @@ anon_1:
 			if(eax)
 			{
 				ecx = ((EDIT *)ebx)->fntinfo.fntht;
-				ecx /= 1;
+				ecx /= 2;
 				edi = rect.top;
 				while(ecx)
 				{
@@ -1688,7 +1688,7 @@ anon_8:
 						eax -= ps.rcPaint.left;
 						edx = ((EDIT *)ebx)->fntinfo.fntht;
 						// sub		edx,7
-						edx /= 1;
+						edx /= 2;
 						edx -= 5;
 						edx += rect1.top;
 						eax = ImageList_Draw(hIml, 3, mDC, eax, edx, ILD_TRANSPARENT);
@@ -1701,7 +1701,7 @@ anon_8:
 						eax -= ps.rcPaint.left;
 						edx = ((EDIT *)ebx)->fntinfo.fntht;
 						// sub		edx,7
-						edx /= 1;
+						edx /= 2;
 						edx -= 5;
 						edx += rect1.top;
 						eax = ImageList_Draw(hIml, 6, mDC, eax, edx, ILD_TRANSPARENT);
@@ -1733,7 +1733,7 @@ anon_8:
 						eax -= ps.rcPaint.left;
 						edx = ((EDIT *)ebx)->fntinfo.fntht;
 						// sub		edx,7
-						edx /= 1;
+						edx /= 2;
 						edx -= 5;
 						edx += rect1.top;
 						eax = ImageList_Draw(hIml, ecx, mDC, eax, edx, ILD_NORMAL);
@@ -1833,7 +1833,7 @@ anon_9:
 			eax = MoveToEx(mDC, eax, edx, NULL);
 			eax = temp1;
 			edx = ((EDIT *)ebx)->fntinfo.fntht;
-			edx /= 1;
+			edx /= 2;
 			edx += rect1.top;
 			temp1 = edx;
 			eax = LineTo(mDC, eax, edx);
@@ -2083,7 +2083,7 @@ anon_10:
 						eax -= 15+12;
 						edx = ((EDIT *)ebx)->fntinfo.fntht;
 						// sub		edx,7
-						edx /= 1;
+						edx /= 2;
 						edx -= 5;
 						edx += rect1.top;
 						eax = ImageList_Draw(hIml, 3, ps.hdc, eax, edx, ILD_TRANSPARENT);
@@ -2095,7 +2095,7 @@ anon_10:
 						eax -= 15+12;
 						edx = ((EDIT *)ebx)->fntinfo.fntht;
 						// sub		edx,7
-						edx /= 1;
+						edx /= 2;
 						edx -= 5;
 						edx += rect1.top;
 						eax = ImageList_Draw(hIml, 6, ps.hdc, eax, edx, ILD_TRANSPARENT);
@@ -2126,7 +2126,7 @@ anon_10:
 						eax -= 15;
 						edx = ((EDIT *)ebx)->fntinfo.fntht;
 						// sub		edx,7
-						edx /= 1;
+						edx /= 2;
 						edx -= 5;
 						edx += rect1.top;
 						eax = ImageList_Draw(hIml, ecx, ps.hdc, eax, edx, ILD_NORMAL);
@@ -2209,7 +2209,7 @@ anon_11:
 			eax = MoveToEx(ps.hdc, eax, edx, NULL);
 			eax = temp1;
 			edx = ((EDIT *)ebx)->fntinfo.fntht;
-			edx /= 1;
+			edx /= 2;
 			edx += rect1.top;
 			temp1 = edx;
 			eax = LineTo(ps.hdc, eax, edx);

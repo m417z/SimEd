@@ -2378,7 +2378,7 @@ anon_12:
 		if(fUnicode==2)
 		{
 			edx = dwRead;
-			edx /= 1;
+			edx /= 2;
 			eax = WideCharToMultiByte(CP_ACP, 0, esi, edx, hCMem, MAXSTREAM, NULL, NULL);
 			dwRead = eax;
 			esi = hCMem;
@@ -2502,7 +2502,7 @@ Ex:
 		// call	((EDITSTREAM *)edx)->pfnCallback
 		eax = &dwWrite;
 		ecx = nChars;
-		ecx *= 1;
+		ecx *= 2;
 		edx = hCMem;
 		edx += MAXSTREAM+1024;
 		eax = ((EDITSTREAMCALLBACKPTR)((EDITSTREAM *)edx)->pfnCallback)(((EDITSTREAM *)edx)->dwCookie, edx, ecx, eax);

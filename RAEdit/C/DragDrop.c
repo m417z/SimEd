@@ -183,7 +183,7 @@ REG_T IDropTarget_DragOver(REG_T pthis, REG_T grfKeyState, POINT pt, REG_T lpdwE
 			} // endif
 			eax = GetClientRect(((IDropTarget *)edi)->hwnd, &rect);
 			ecx = ((EDIT *)ebx)->fntinfo.fntht;
-			ecx /= 1;
+			ecx /= 2;
 			eax = pt.y;
 			edx = eax+ecx;
 			if(eax<ecx)
@@ -521,7 +521,7 @@ REG_T IDO_GetData(REG_T pthis, REG_T pFormatetc, REG_T pmedium)
 					{
 						eax = -eax;
 					} // endif
-					eax *= 1;
+					eax *= 2;
 					eax++;
 					eax = xGlobalAlloc(GMEM_SHARE | GMEM_MOVEABLE | GMEM_ZEROINIT, eax);
 					hCMem = eax;
