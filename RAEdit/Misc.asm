@@ -386,9 +386,9 @@ GetRect:
 	sub		eax,[esi].RAEDT.cpy
 	mov		[edi].RECT.top,eax
 	mov		eax,blrg.lnMax
-	inc		eax
 	invoke GetYpFromLine,ebx,eax
 	sub		eax,[esi].RAEDT.cpy
+	add		eax,[ebx].EDIT.fntinfo.fntht
 	mov		[edi].RECT.bottom,eax
 	mov		ecx,[ebx].EDIT.fntinfo.fntwt
 	mov		eax,blrg.clMin
