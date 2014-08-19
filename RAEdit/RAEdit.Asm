@@ -3633,7 +3633,7 @@ AllocMem:
 	;Line
 	invoke xHeapAlloc,[ebx].EDIT.hHeap,HEAP_GENERATE_EXCEPTIONS or HEAP_ZERO_MEMORY,MAXLINEMEM*8
 	mov		[ebx].EDIT.hLine,eax
-	mov		[ebx].EDIT.cbLine,MAXLINEMEM
+	mov		[ebx].EDIT.cbLine,MAXLINEMEM*8
 	mov		[ebx].EDIT.rpLine,0
 	mov		[ebx].EDIT.rpLineFree,sizeof LINE
 	;Chars
@@ -3652,7 +3652,7 @@ AllocMem:
 	;Undo
 	invoke xHeapAlloc,[ebx].EDIT.hHeap,HEAP_GENERATE_EXCEPTIONS or HEAP_ZERO_MEMORY,MAXUNDOMEM
 	mov		[ebx].EDIT.hUndo,eax
-	mov		[ebx].EDIT.cbUndo,MAXCHARMEM
+	mov		[ebx].EDIT.cbUndo,MAXUNDOMEM
 	mov		[ebx].EDIT.rpUndo,0
 	;Misc
 	xor		eax,eax
