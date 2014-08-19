@@ -361,11 +361,9 @@ IsLine proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,lpszTest:DWORD
 	mov		esi,lpszTest
 	mov		eax,-1
 	.if edi<[ebx].EDIT.rpLineFree && byte ptr [esi]
-		.if byte ptr [esi]
-			mov		edi,nLine
-			shl		edi,2
-			call	TestLine
-		.endif
+		mov		edi,nLine
+		shl		edi,2
+		call	TestLine
 	.endif
 	ret
 
