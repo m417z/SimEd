@@ -262,7 +262,7 @@ InsertChar proc uses ebx esi edi,hMem:DWORD,cp:DWORD,nChr:DWORD
 			inc		ecx
 			inc		edx
 		.endw
-		; Update lenght of old and new line
+		; Update length of old and new line
 		mov		[edi].CHARS.len,edx
 		sub		[esi].CHARS.len,edx
 		mov		eax,[esi].CHARS.len
