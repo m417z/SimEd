@@ -268,8 +268,8 @@ SetBlocks proc uses ebx esi edi,hMem:DWORD,lpLnrg:DWORD,lpBlockDef:DWORD
 	mov		nLine,0
 	mov		eax,lpLnrg
 	.if eax
-		mov		eax,[eax].LINERANGE.lnMin
-		mov		nLine,eax
+		mov		ecx,[eax].LINERANGE.lnMin
+		mov		nLine,ecx
 		mov		eax,[eax].LINERANGE.lnMax
 		inc		eax
 		inc		eax
