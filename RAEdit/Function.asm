@@ -387,9 +387,6 @@ IsLine proc uses ebx esi edi,hMem:DWORD,nLine:DWORD,lpszTest:DWORD
 		mov		edi,nLine
 		shl		edi,2
 		call	NestedProc_TestLine
-			.if notfound!=0
-				.break
-			.endif
 	.endif
 	ret
 
