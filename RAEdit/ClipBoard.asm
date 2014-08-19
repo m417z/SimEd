@@ -118,8 +118,8 @@ CopyBlockLine:
 		pop		eax
 		inc		eax
 	.endw
-	mov		eax,0A0Dh
-	mov		[esi],eax
+	mov		ax,0A0Dh
+	mov		[esi],ax
 	add		esi,2
 	retn
 
