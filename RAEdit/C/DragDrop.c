@@ -10,7 +10,7 @@ REG_T IsEqualGUID(REG_T rguid1, REG_T rguid2)
 	esi = rguid1;
 	edi = rguid2;
 	ecx = sizeof(GUID)/4;
-	eax = memcmp(esi, edi, ecx*4) == 0;
+	eax = memcmp(esi, edi, ecx*4) == 0;
 	return eax;
 
 } // IsEqualGUID
@@ -618,13 +618,13 @@ REG_T IDO_GetCanonicalFormatEtc(REG_T pthis, REG_T pFormatetcIn, REG_T pFormatet
 	esi = pFormatetcIn;
 	edi = pFormatetcOut;
 	ecx = sizeof(FORMATETC);
-	while(ecx > 0)
-	{
-		*(BYTE *)edi = *(BYTE *)esi;
-		edi++;
-		esi++;
-		ecx--;
-	}
+	while(ecx > 0)
+	{
+		*(BYTE *)edi = *(BYTE *)esi;
+		edi++;
+		esi++;
+		ecx--;
+	}
 	((FORMATETC *)edi)->lptd = NULL;
 	eax = DATA_S_SAMEFORMATETC;
 	return eax;

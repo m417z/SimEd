@@ -473,7 +473,6 @@ REG_T IsLine(DWORD hMem, DWORD nLine, DWORD lpszTest)
 	DWORD tmpesi;
 	DWORD fCmnt;
 	// LOCAL	espsave:DWORD
-	DWORD esisave;
 	DWORD notfound;
 
 	auto void TestLine(void);
@@ -492,31 +491,12 @@ REG_T IsLine(DWORD hMem, DWORD nLine, DWORD lpszTest)
 	edi = nLine;
 	edi *= 4;
 	esi = lpszTest;
+	eax = -1;
 	if(edi<((EDIT *)ebx)->rpLineFree && *(BYTE *)esi)
 	{
-		while(*(BYTE *)esi)
-		{
-			esisave = esi;
-			edi = nLine;
-			edi *= 4;
-			TestLine();
-			if(notfound!=0)
-			{
-				break;
-			} // endif
-			if(eax!=-1)
-			{
-				break;
-			} // endif
-			esi = esisave;
-			eax = strlen(esi);
-			esi = esi+eax+1;
-			eax = -1;
-		} // endw
-	}
-	else
-	{
-		eax = -1;
+		edi = nLine;
+		edi *= 4;
+		TestLine();
 	} // endif
 	return eax;
 
@@ -1952,6 +1932,7 @@ REG_T TrimSpace(DWORD hMem, DWORD nLine, DWORD fLeft)
 	cp = eax;
 	edi *= 4;
 	edx = 0;
+	ecx = 0;
 	if(edi<((EDIT *)ebx)->rpLineFree)
 	{
 		edi += ((EDIT *)ebx)->hLine;
@@ -1963,7 +1944,6 @@ REG_T TrimSpace(DWORD hMem, DWORD nLine, DWORD fLeft)
 			if(fLeft)
 			{
 				// Left trim (Not implemented)
-				ecx = 0;
 			}
 			else
 			{
@@ -3115,6 +3095,7 @@ REG_T GetLineBegin(DWORD hMem, DWORD nLine)
 	REG_T eax = 0, ecx, edx, ebx, esi, edi;
 	REG_T temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
 
+	ebx = hMem;
 	eax = nLine;
 	if(eax)
 	{
@@ -3132,7 +3113,7 @@ REG_T GetLineBegin(DWORD hMem, DWORD nLine)
 				break;
 			} // endif
 			RBYTE_LOW(eax) = *(BYTE *)(esi+ecx+sizeof(CHARS)-2);
-			if(RBYTE_LOW(eax)!=bracketcont && RBYTE_LOW(eax) !=bracketcont[1])
+			if(RBYTE_LOW(eax)!=bracketcont && RBYTE_LOW(eax)!=bracketcont[1])
 			{
 				break;
 			} // endif

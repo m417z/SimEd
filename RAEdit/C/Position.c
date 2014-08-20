@@ -269,10 +269,10 @@ REG_T GetLineFromCp(DWORD hMem, DWORD cp)
 		while(eax<cp)
 		{
 			edx = ecx*4;
-			if(edx>=((EDIT *)ebx)->rpLineFree)
-			{
-				break;
-			}
+			if(edx>=((EDIT *)ebx)->rpLineFree)
+			{
+				break;
+			}
 			edx = [esi+ecx*sizeof(LINE)].LINE.rpChars;
 			eax += ((CHARS *)(edi+edx))->len;
 			ecx++;
@@ -977,11 +977,8 @@ anon_10:
 				ecx = ((EDIT *)ebx)->fntinfo.fntwt;
 				ecx <<= 3;
 				eax -= ecx;
-				if(((EDIT *)ebx)->cpx<eax)
-				{
-					((EDIT *)ebx)->cpx += eax;
-				}
-				else
+				((EDIT *)ebx)->cpx += eax;
+				if(((EDIT *)ebx)->cpx>=eax)
 				{
 					((EDIT *)ebx)->cpx = 0;
 				} // endif
@@ -1039,6 +1036,7 @@ REG_T GetBlockCp(DWORD hMem, DWORD nLine, DWORD nPos)
 	REG_T eax = 0, ecx, edx, ebx, edi;
 	REG_T temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
 
+	ebx = hMem;
 	eax = GetCpFromLine(ebx, nLine);
 	edi = eax;
 	eax = nPos;

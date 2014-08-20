@@ -25,13 +25,13 @@ REG_T InsertNewLine(DWORD hMem, DWORD nLine, DWORD nSize)
 		esi = edi;
 		esi -= sizeof(LINE);
 		ecx /= 4;
-		while(ecx > 0)
-		{
-			*(DWORD *)edi = *(DWORD *)esi;
-			edi -= 4;
-			esi -= 4;
-			ecx--;
-		}
+		while(ecx > 0)
+		{
+			*(DWORD *)edi = *(DWORD *)esi;
+			edi -= 4;
+			esi -= 4;
+			ecx--;
+		}
 		esi = temp1;
 	} // endif
 	((EDIT *)ebx)->rpLineFree += sizeof(LINE);
@@ -85,13 +85,13 @@ REG_T AddNewLine(DWORD hMem, DWORD lpLine, DWORD nSize)
 	ecx = nSize;
 	esi = lpLine;
 	edi = edi+sizeof(CHARS);
-	while(ecx > 0)
-	{
-		*(BYTE *)edi = *(BYTE *)esi;
-		edi++;
-		esi++;
-		ecx--;
-	}
+	while(ecx > 0)
+	{
+		*(BYTE *)edi = *(BYTE *)esi;
+		edi++;
+		esi++;
+		ecx--;
+	}
 	return eax;
 
 } // AddNewLine
@@ -135,13 +135,13 @@ REG_T ExpandCharLine(DWORD hMem)
 		((EDIT *)ebx)->rpChars = eax;
 		temp1 = esi;
 		temp2 = edi;
-		while(ecx > 0)
-		{
-			*(BYTE *)edi = *(BYTE *)esi;
-			edi++;
-			esi++;
-			ecx--;
-		}
+		while(ecx > 0)
+		{
+			*(BYTE *)edi = *(BYTE *)esi;
+			edi++;
+			esi++;
+			ecx--;
+		}
 		edi = temp2;
 		esi = temp1;
 		((CHARS *)edi)->max += MAXFREE;
@@ -259,13 +259,13 @@ REG_T InsertChar(DWORD hMem, DWORD cp, DWORD nChr)
 		esi = esi+ecx+sizeof(CHARS)-1;
 		esi = esi+edi;
 		edi = esi+1;
-		while(ecx > 0)
-		{
-			*(BYTE *)edi = *(BYTE *)esi;
-			edi--;
-			esi--;
-			ecx--;
-		}
+		while(ecx > 0)
+		{
+			*(BYTE *)edi = *(BYTE *)esi;
+			edi--;
+			esi--;
+			ecx--;
+		}
 	} // endif
 	edi = temp2;
 	esi = temp1;
@@ -312,7 +312,7 @@ REG_T InsertChar(DWORD hMem, DWORD cp, DWORD nChr)
 			ecx++;
 			edx++;
 		} // endw
-		// Update lenght of old and new line
+		// Update length of old and new line
 		((CHARS *)edi)->len = edx;
 		((CHARS *)esi)->len -= edx;
 		eax = ((CHARS *)esi)->len;
@@ -404,13 +404,13 @@ REG_T DeleteChar(DWORD hMem, DWORD cp)
 					edi = eax;
 					ecx = temp3;
 					temp3 = edi;
-					while(ecx > 0)
-					{
-						*(BYTE *)edi = *(BYTE *)esi;
-						edi++;
-						esi++;
-						ecx--;
-					}
+					while(ecx > 0)
+					{
+						*(BYTE *)edi = *(BYTE *)esi;
+						edi++;
+						esi++;
+						ecx--;
+					}
 					esi = temp3;
 					edi = 0;
 					while(edi<((CHARS *)esi)->len)

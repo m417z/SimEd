@@ -150,8 +150,8 @@ REG_T EditCopyBlock(DWORD hMem, DWORD lpCMem)
 			eax = temp1;
 			eax++;
 		} // endw
-		eax = 0x0A0D;
-		*(DWORD *)esi = eax;
+		RWORD(eax) = 0x0A0D;
+		*(WORD *)esi = RWORD(eax);
 		esi += 2;
 		return;
 
@@ -439,7 +439,6 @@ REG_T Paste(DWORD hMem, DWORD hWin, DWORD hData)
 {
 	REG_T eax = 0, ecx, edx, ebx, esi, edi;
 	REG_T temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
-	POINT pt;
 	BLOCKRANGE blrg;
 
 	ebx = hMem;
@@ -483,7 +482,6 @@ REG_T Cut(DWORD hMem, DWORD hWin)
 {
 	REG_T eax = 0, ecx, edx, ebx, esi;
 	REG_T temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
-	POINT pt;
 
 	ebx = hMem;
 	eax = hWin;
