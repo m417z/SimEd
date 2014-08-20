@@ -39,7 +39,9 @@ start:
 		inc		eax
 		jmp		@b
 	.ELSEIF dl=='"'
+		push eax
 		invoke PathUnquoteSpaces,eax
+		pop eax
 	.ENDIF
 	mov		CommandLine,eax
 	invoke InitCommonControls
