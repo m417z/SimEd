@@ -5252,6 +5252,7 @@ align 4
 					rep movsb
 					.break
 				.endif
+				add		chrg.cpMin,ecx
 				rep movsb
 				add		edx,sizeof LINE
 			.endw

@@ -6072,6 +6072,7 @@ anon_8:
 					}
 					break;
 				} // endif
+				chrg.cpMin += ecx;
 				while(ecx > 0)
 				{
 					*(BYTE *)edi = *(BYTE *)esi;
