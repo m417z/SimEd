@@ -269,10 +269,10 @@ REG_T GetLineFromCp(DWORD hMem, DWORD cp)
 		while(eax<cp)
 		{
 			edx = ecx*4;
-			if(edx>=((EDIT *)ebx)->rpLineFree)
-			{
-				break;
-			}
+			if(edx>=((EDIT *)ebx)->rpLineFree)
+			{
+				break;
+			}
 			edx = [esi+ecx*sizeof(LINE)].LINE.rpChars;
 			eax += ((CHARS *)(edi+edx))->len;
 			ecx++;

@@ -173,12 +173,12 @@ REG_T SetHiliteWords(DWORD nColor, DWORD lpWords)
 		ecx = cbWrdMem;
 		ecx /= 4;
 		eax = 0;
-		while(ecx > 0)
-		{
-			*(DWORD *)edi = eax;
-			edi += 4;
-			ecx--;
-		}
+		while(ecx > 0)
+		{
+			*(DWORD *)edi = eax;
+			edi += 4;
+			ecx--;
+		}
 		rpWrdFree = 256*4;
 	}
 	else
@@ -437,12 +437,12 @@ REG_T SetBlockDef(DWORD lpRABLOCKDEF)
 		ecx = sizeof(blockdefs)/4;
 		edi = blockdefs;
 		eax = 0;
-		while(ecx > 0)
-		{
-			*(DWORD *)edi = eax;
-			edi += 4;
-			ecx--;
-		}
+		while(ecx > 0)
+		{
+			*(DWORD *)edi = eax;
+			edi += 4;
+			ecx--;
+		}
 	}
 	else
 	{
@@ -4071,13 +4071,13 @@ REG_T RAWndProc(HWND hWin, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			esi += edx;
 			esi += sizeof(CHARS);
 			eax = ecx;
-			while(ecx > 0)
-			{
-				*(BYTE *)edi = *(BYTE *)esi;
-				edi++;
-				esi++;
-				ecx--;
-			}
+			while(ecx > 0)
+			{
+				*(BYTE *)edi = *(BYTE *)esi;
+				edi++;
+				esi++;
+				ecx--;
+			}
 			*(BYTE *)edi = 0;
 			return eax;
 
@@ -4665,13 +4665,13 @@ anon_7:
 					esi += edx;
 					esi += sizeof(CHARS);
 					eax = ecx;
-					while(ecx > 0)
-					{
-						*(BYTE *)edi = *(BYTE *)esi;
-						edi++;
-						esi++;
-						ecx--;
-					}
+					while(ecx > 0)
+					{
+						*(BYTE *)edi = *(BYTE *)esi;
+						edi++;
+						esi++;
+						ecx--;
+					}
 					*(BYTE *)edi = 0;
 					eax = ((EDIT *)ebx)->line;
 				}
@@ -5070,13 +5070,13 @@ anon_7:
 			esi += edx;
 			esi += sizeof(CHARS);
 			eax = ecx;
-			while(ecx > 0)
-			{
-				*(BYTE *)edi = *(BYTE *)esi;
-				edi++;
-				esi++;
-				ecx--;
-			}
+			while(ecx > 0)
+			{
+				*(BYTE *)edi = *(BYTE *)esi;
+				edi++;
+				esi++;
+				ecx--;
+			}
 			*(BYTE *)edi = 0;
 			return eax;
 
@@ -5164,13 +5164,13 @@ anon_7:
 			esi = CharTabInit;
 			edi = CharTab;
 			ecx = 256;
-			while(ecx > 0)
-			{
-				*(BYTE *)edi = *(BYTE *)esi;
-				edi++;
-				esi++;
-				ecx--;
-			}
+			while(ecx > 0)
+			{
+				*(BYTE *)edi = *(BYTE *)esi;
+				edi++;
+				esi++;
+				ecx--;
+			}
 			return eax;
 
 		case REM_LINEREDTEXT:
@@ -5638,13 +5638,13 @@ anon_8:
 				} // endif
 				temp1 = ecx;
 				esi = edx+sizeof(CHARS);
-				while(ecx > 0)
-				{
-					*(BYTE *)edi = *(BYTE *)esi;
-					edi++;
-					esi++;
-					ecx--;
-				}
+				while(ecx > 0)
+				{
+					*(BYTE *)edi = *(BYTE *)esi;
+					edi++;
+					esi++;
+					ecx--;
+				}
 				eax = temp1;
 			}
 			else
@@ -5899,12 +5899,12 @@ anon_8:
 			ecx = ((EDIT *)ebx)->cbUndo;
 			eax = 0;
 			((EDIT *)ebx)->rpUndo = eax;
-			while(ecx > 0)
-			{
-				*(BYTE *)edi = RBYTE_LOW(eax);
-				edi++;
-				ecx--;
-			}
+			while(ecx > 0)
+			{
+				*(BYTE *)edi = RBYTE_LOW(eax);
+				edi++;
+				ecx--;
+			}
 			nUndoid++;
 			return eax;
 
@@ -6063,23 +6063,23 @@ anon_8:
 				{
 					ecx = chrg.cpMax;
 					chrg.cpMin += ecx;
-					while(ecx > 0)
-					{
-						*(BYTE *)edi = *(BYTE *)esi;
-						edi++;
-						esi++;
-						ecx--;
-					}
+					while(ecx > 0)
+					{
+						*(BYTE *)edi = *(BYTE *)esi;
+						edi++;
+						esi++;
+						ecx--;
+					}
 					break;
 				} // endif
 				chrg.cpMin += ecx;
-				while(ecx > 0)
-				{
-					*(BYTE *)edi = *(BYTE *)esi;
-					edi++;
-					esi++;
-					ecx--;
-				}
+				while(ecx > 0)
+				{
+					*(BYTE *)edi = *(BYTE *)esi;
+					edi++;
+					esi++;
+					ecx--;
+				}
 				edx += sizeof(LINE);
 			} // endw
 			*(BYTE *)edi = 0;

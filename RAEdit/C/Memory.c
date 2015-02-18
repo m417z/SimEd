@@ -67,13 +67,13 @@ REG_T ExpandLineMem(DWORD hMem)
 			edi = eax;
 			temp1 = esi;
 			ecx /= 4;
-			while(ecx > 0)
-			{
-				*(DWORD *)edi = *(DWORD *)esi;
-				edi += 4;
-				esi += 4;
-				ecx--;
-			}
+			while(ecx > 0)
+			{
+				*(DWORD *)edi = *(DWORD *)esi;
+				edi += 4;
+				esi += 4;
+				ecx--;
+			}
 			esi = temp1;
 			eax = HeapFree(((EDIT *)ebx)->hHeap, 0, esi);
 		} // endif
@@ -105,22 +105,22 @@ anon_1:
 	edx -= ecx;
 	temp1 = ecx;
 	ecx /= 4;
-	while(ecx > 0)
-	{
-		*(DWORD *)edi = *(DWORD *)esi;
-		edi += 4;
-		esi += 4;
-		ecx--;
-	}
+	while(ecx > 0)
+	{
+		*(DWORD *)edi = *(DWORD *)esi;
+		edi += 4;
+		esi += 4;
+		ecx--;
+	}
 	ecx = temp1;
 	ecx &= 3;
-	while(ecx > 0)
-	{
-		*(BYTE *)edi = *(BYTE *)esi;
-		edi++;
-		esi++;
-		ecx--;
-	}
+	while(ecx > 0)
+	{
+		*(BYTE *)edi = *(BYTE *)esi;
+		edi++;
+		esi++;
+		ecx--;
+	}
 	edi += edx;
 	eax = eax+sizeof(LINE);
 	if(eax!=lpLine)
@@ -206,13 +206,13 @@ REG_T ExpandUndoMem(DWORD hMem, DWORD cb)
 			edi = eax;
 			temp1 = esi;
 			ecx /= 4;
-			while(ecx > 0)
-			{
-				*(DWORD *)edi = *(DWORD *)esi;
-				edi += 4;
-				esi += 4;
-				ecx--;
-			}
+			while(ecx > 0)
+			{
+				*(DWORD *)edi = *(DWORD *)esi;
+				edi += 4;
+				esi += 4;
+				ecx--;
+			}
 			esi = temp1;
 			eax = HeapFree(((EDIT *)ebx)->hHeap, 0, esi);
 		} // endif
@@ -247,13 +247,13 @@ REG_T ExpandWordMem(void)
 			hWrdMem = edi;
 			temp1 = esi;
 			ecx /= 4;
-			while(ecx > 0)
-			{
-				*(DWORD *)edi = *(DWORD *)esi;
-				edi += 4;
-				esi += 4;
-				ecx--;
-			}
+			while(ecx > 0)
+			{
+				*(DWORD *)edi = *(DWORD *)esi;
+				edi += 4;
+				esi += 4;
+				ecx--;
+			}
 			esi = temp1;
 			eax = GetProcessHeap();
 			eax = HeapFree(eax, 0, esi);
