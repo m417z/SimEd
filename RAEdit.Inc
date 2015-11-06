@@ -1,7 +1,7 @@
 InstallRAEdit			PROTO :DWORD,:DWORD
 UnInstallRAEdit			PROTO
 GetCharTabPtr			PROTO
-
+test2
 ;Default colors
 BCKCLR					equ 00C0F0F0h
 TXTCLR					equ 00000000h
