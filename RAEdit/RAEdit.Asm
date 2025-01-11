@@ -3160,6 +3160,9 @@ RAWndProc proc uses ebx esi edi,hWin:HWND,uMsg:UINT,wParam:WPARAM,lParam:LPARAM
 			add		edx,sizeof LINE
 		.endw
 		jmp		Ex
+	.elseif eax==WM_GETDLGCODE
+		mov		eax,DLGC_WANTCHARS or DLGC_WANTALLKEYS
+		jmp		Ex
 	.elseif eax==WM_MOUSEMOVE
 		;Get mouse position
 		mov		eax,lParam
